@@ -1,0 +1,1109 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.IO;
+using System.Globalization;
+namespace WindowsFormsApplication2
+{
+public partial class Form1 : Form
+{
+public Form1()
+{
+InitializeComponent();
+}
+public struct lexema
+{
+public int id;
+public string s;
+};
+static FileStream g = new
+FileStream("C:\\Users\\Lizard\\Documents\\Visual Studio
+2015\\Projects\\ConsoleApplication4\\ConsoleApplication4\\output.txt",
+FileMode.Create, FileAccess.Write);
+static StreamWriter writer = new StreamWriter(g);
+static FileStream lex = new
+FileStream("C:\\Users\\Lizard\\Documents\\Visual Studio
+2015\\Projects\\ConsoleApplication4\\ConsoleApplication4\\lexemy.txt",
+FileMode.Create, FileAccess.Write);
+static StreamWriter writer_lex = new StreamWriter(lex);
+static lexema[] W = new lexema[36]; //массив служебных слов
+static lexema[] R = new lexema[19]; //массив разделителей
+static lexema[] O = new lexema[12]; //массив операций
+static lexema[] I = new lexema[1000]; //массив идентификаторов
+static lexema[] N = new lexema[1000]; //массив чисел
+static bool err = false; //переменная наличия ошибки
+static void er() //процедура-ошибка
+{
+err = true;
+}
+static void init() //инициализация таблиц лексем
+{
+W[0].id = 1; W[0].s = "Program";
+W[1].id = 2; W[1].s = "Begin";
+W[2].id = 3; W[2].s = "End";
+W[3].id = 4; W[3].s = "Var";
+W[4].id = 5; W[4].s = "integer";
+W[5].id = 6; W[5].s = "real";
+W[6].id = 7; W[6].s = "string";
+W[7].id = 8; W[7].s = "array";
+W[8].id = 9; W[8].s = "of";
+W[9].id = 10; W[9].s = "procedure";
+W[10].id = 11; W[10].s = "function";
+W[11].id = 12; W[11].s = "return";
+W[12].id = 13; W[12].s = "goto";
+W[13].id = 14; W[13].s = "if";
+W[14].id = 15; W[14].s = "then";
+W[15].id = 16; W[15].s = "else";
+W[16].id = 17; W[16].s = "not";
+W[17].id = 18; W[17].s = "and";
+W[18].id = 19; W[18].s = "or";
+W[19].id = 20; W[19].s = "xor";
+W[20].id = 21; W[20].s = "Read";
+W[21].id = 22; W[21].s = "Write";
+W[22].id = 23; W[22].s = "boolean";
+W[23].id = 24; W[23].s = "while";
+W[24].id = 25; W[24].s = "repeat";
+W[25].id = 26; W[25].s = "until";
+W[26].id = 27; W[26].s = "do";
+W[27].id = 28; W[27].s = "to";
+W[28].id = 29; W[28].s = "longint";
+W[29].id = 30; W[29].s = "true";
+W[30].id = 31; W[30].s = "false";
+W[31].id = 32; W[31].s = "for";
+W[32].id = 33; W[32].s = "sqrt";
+W[33].id = 34; W[33].s = "div";
+W[34].id = 35; W[34].s = "mod";
+W[35].id = 36; W[35].s = "sqr";
+R[0].id = 1; R[0].s = ".";
+R[1].id = 2; R[1].s = "'";
+R[2].id = 3; R[2].s = "[";
+R[3].id = 4; R[3].s = "]";
+R[4].id = 5; R[4].s = ",";
+R[5].id = 6; R[5].s = "{";
+R[6].id = 7; R[6].s = "}";
+R[7].id = 8; R[7].s = "(";
+R[8].id = 9; R[8].s = ")";
+R[9].id = 10; R[9].s = ";";
+R[10].id = 11; R[10].s = " ";
+R[11].id = 12; R[11].s = "\r"; //возврат каретки
+R[12].id = 13; R[12].s = ":";
+R[13].id = 14; R[13].s = "\n"; //новая строка
+R[14].id = 15; R[14].s = "\b"; //возврат на 1 позицию
+R[15].id = 16; R[15].s = "\t"; //горизонтальная табуляция
+R[16].id = 17; R[16].s = "\\";
+R[17].id = 18; R[17].s = "\"";
+R[18].id = 19; R[18].s = "..";
+O[0].id = 1; O[0].s = "+";
+O[1].id = 2; O[1].s = "-";
+O[2].id = 3; O[2].s = "*";
+O[3].id = 4; O[3].s = "/";
+O[4].id = 5; O[4].s = "^";
+O[5].id = 6; O[5].s = "<";
+O[6].id = 7; O[6].s = ">";
+O[7].id = 8; O[7].s = "=";
+O[8].id = 9; O[8].s = ">=";
+O[9].id = 10; O[9].s = "<=";
+O[10].id = 11; O[10].s = "<>";
+O[11].id = 12; O[11].s = ":=";
+}
+static void p1(string s) //семантическая процедура 1
+{
+init();
+int i = 0; bool f = false; int j = 0;
+while ((I[i].s != null) && (i < 1000) && (!f))
+{
+if (I[i].s == s)
+{
+f = true; j = i;
+}
+else
+{
+i++;
+}
+}
+if (!f)
+{
+j = 0;
+while ((I[j].s != null) && (j < 1000))
+{
+j++;
+}
+I[j].id = j + 1; I[j].s = s;
+}
+writer.WriteLine("I" + I[j].id.ToString());
+}
+static void p2(string s) //семантическая процедура 2
+{
+init(); bool f = false; int i = 0; int j = 0;
+while ((!f) && (i < 36))
+{
+if (W[i].s == s)
+{
+f = true; j = W[i].id;
+}
+else
+{
+i++;
+}
+}
+if (f)
+{
+writer.WriteLine("W" + j.ToString());
+}
+else
+{
+p1(s);
+}
+}
+static void p3(string s) //семантическая процедура 3
+{
+init(); int i = 0; bool f = false; int j = 0;
+while ((N[i].s != null) && (i < 1000) && (!f))
+{
+if (N[i].s == s) { f = true; j = i; }
+else { i++; }
+}
+if (!f)
+{
+j = 0;
+while ((N[j].s != null) && (j < 1000))
+{
+j++;
+}
+N[j].id = j + 1; N[j].s = s;
+}
+writer.WriteLine("N" + N[j].id.ToString());
+}
+static void p4(string s) //семантическая процедура 4
+{
+init(); int i = 0; bool f = false; int j = 0;
+while ((!f) && (i < 19))
+{
+if (R[i].s == s)
+{
+f = true; j = R[i].id;
+}
+else
+{
+i++;
+}
+}
+if (f)
+{
+writer.WriteLine("R" + j.ToString());
+}
+}
+static void p5(string s) //семантическая процедура 5
+{
+init(); s = "";
+}
+static void p6(string s) //семантическая процедура 6
+{
+init(); int i = 0; bool f = false; int j = 0;
+while ((!f) && (i < 12))
+{
+if (O[i].s == s)
+{
+f = true; j = O[i].id;
+}
+else
+{
+i++;
+}
+}
+if (f)
+{
+writer.WriteLine("O" + j.ToString());
+}
+}
+static void p7(string s, string c) //семантическая процедура 7
+{
+string st = s + c;
+init(); int i = 0; bool f = false; int j = 0;
+while ((!f) && (i < 12))
+{
+if (O[i].s == st)
+{
+f = true; j = O[i].id;
+}
+else
+{
+i++;
+}
+}
+if (f)
+{
+writer.WriteLine("O" + j.ToString());
+}
+else
+{
+er();
+}
+}
+static void p8(string s) //семантическая процедура 8
+{
+p6(s);
+}
+static void p9(string s) //семантическая процедура 9
+{
+p4(s);
+}
+static void S(string s)
+{
+int i = 0; err = false; init(); string buf = "";
+if(s==””){er();}
+while ((i < s.Length) && (!err))
+{
+if ((i < s.Length) && ((s[i] >= 'a') && (s[i] <= 'z')
+|| (s[i] >= 'A') && (s[i] <= 'Z') || (s[i] == '_')))
+{
+while ((i < s.Length) && ((s[i] >= 'a') && (s[i] <=
+'z') || (s[i] >= 'A') && (s[i] <= 'Z') || (s[i] == '_')))
+{
+buf = buf + s[i]; i++;
+}
+if ((i < s.Length) && (s[i] >= '0') && (s[i] <=
+'9'))
+{
+while ((i < s.Length) && ((s[i] >= 'a') &&
+(s[i] <= 'z') || (s[i] >= 'A') && (s[i] <= 'Z') || (s[i] >= '0') && (s[i]
+<= '9') || (s[i] == '_')))
+{
+buf = buf + s[i]; i++;
+}
+string c = ""; if (i < s.Length) { c = "" +
+s[i]; }
+bool f = false; int j = 0; int k = 0;
+while ((!f) && (j < 19))
+{
+if (R[j].s == c) { f = true; }
+else { j++; }
+}
+while ((!f) && (k < 12))
+{
+if (O[k].s == c) { f = true; }
+else { k++; }
+}
+if (f) { p1(buf); Console.WriteLine(buf);
+writer_lex.WriteLine(buf); buf = ""; }
+else { er(); }
+}
+else
+{
+string c = ""; if (i < s.Length) { c = "" +
+s[i]; }
+bool f = false; int j = 0; int k = 0;
+while ((!f) && (j < 19))
+{
+if (R[j].s == c) { f = true; }
+else { j++; }
+}
+while ((!f) && (k < 12))
+{
+if (O[k].s == c) { f = true; }
+else { k++; }
+}
+if (f) { p2(buf); Console.WriteLine(buf);
+writer_lex.WriteLine(buf); buf = ""; }
+else { er(); }
+}
+}
+else
+{
+if ((i < s.Length) && (s[i] >= '0') && (s[i] <=
+'9'))
+{
+while ((i < s.Length) && (s[i] >= '0') && (s[i]
+<= '9'))
+{
+buf = buf + s[i]; i++;
+}
+if ((i < s.Length) && (s[i] == '.'))
+{
+i++; string c2 = "";
+while ((i < s.Length) && (s[i] >= '0') &&
+(s[i] <= '9'))
+{
+c2 = c2 + s[i]; i++;
+}
+if (c2 != "")
+{
+if ((i < s.Length) && ((s[i] == 'e') ||
+(s[i] == 'E')))
+{
+if ((i < s.Length - 1) && ((s[i +
+1] == '+') || (s[i + 1] == '-')))
+{
+if ((i < s.Length - 2) && (s[i
++ 2] >= '0') && (s[i + 2] <= '9'))
+{
+string c4 = ""; int j4 = i
++ 2;
+while ((j4 < s.Length) &&
+(s[j4] >= '0') && (s[j4] <= '9'))
+{
+c4 = c4 + s[j4]; j4++;
+}
+if (c4 != "")
+{
+c2 = c2 + s[i] + s[i +
+1] + c4;
+i = j4;
+string c5 = ""; if (i <
+s.Length) { c5 = "" + s[i]; }
+bool f5 = false; int j5
+= 0; int k5 = 0;
+while ((!f5) && (j5 <
+19))
+{
+if ((R[j5].s == c5)
+&& (c5 != ".")) { f5 = true; }
+else { j5++; }
+}
+while ((!f5) && (k5 <
+12))
+{
+if (O[k5].s == c5)
+{ f5 = true; }
+else { k5++; }
+}
+if (!f5) { er(); }
+}
+}
+else { er(); }
+}
+else
+{
+if ((i < s.Length - 1) && (s[i
++ 1] >= '0') && (s[i + 1] <= '9'))
+{
+string c4 = ""; int j4 = i
++ 1;
+while ((j4 < s.Length) &&
+(s[j4] >= '0') && (s[j4] <= '9'))
+{
+c4 = c4 + s[j4]; j4++;
+}
+if (c4 != "")
+{
+c2 = c2 + s[i] + c4;
+i = j4;
+string c5 = ""; if (i <
+s.Length) { c5 = "" + s[i]; }
+bool f5 = false; int j5
+= 0; int k5 = 0;
+while ((!f5) && (j5 <
+19))
+{
+if ((R[j5].s == c5)
+&& (c5 != ".")) { f5 = true; }
+else { j5++; }
+}
+while ((!f5) && (k5 <
+12))
+{
+if (O[k5].s == c5)
+{ f5 = true; }
+else { k5++; }
+}
+if (!f5) { er(); }
+}
+}
+else { er(); }
+}
+}
+}
+if (c2 != "")
+{
+buf = buf + "." + c2;
+string c3 = ""; if (i < s.Length) { c3
+= "" + s[i]; }
+bool f3 = false; int j3 = 0; int k3 =
+0;
+while ((!f3) && (j3 < 19))
+{
+if ((R[j3].s == c3) && (c3 != "."))
+{ f3 = true; }
+else { j3++; }
+}
+while ((!f3) && (k3 < 12))
+{
+if (O[k3].s == c3) { f3 = true; }
+else { k3++; }
+}
+if (f3) { p3(buf);
+Console.WriteLine(buf); writer_lex.WriteLine(buf); buf = ""; }
+else { er(); }
+}
+else
+{
+p3(buf); Console.WriteLine(buf);
+writer_lex.WriteLine(buf); buf = "";
+}
+}
+else
+{
+if ((i < s.Length) && ((s[i] == 'e') ||
+(s[i] == 'E')))
+{
+if ((i < s.Length - 1) && ((s[i + 1] ==
+'+') || (s[i + 1] == '-')))
+{
+if ((i < s.Length - 2) && (s[i + 2]
+>= '0') && (s[i + 2] <= '9'))
+{
+int j6 = i + 2; buf = buf +
+s[i] + s[i + 1];
+while ((j6 < s.Length) &&
+(s[j6] >= '0') && (s[j6] <= '9'))
+{
+buf = buf + s[j6]; j6++;
+}
+p3(buf);
+Console.WriteLine(buf); writer_lex.WriteLine(buf); buf = "";
+i = j6; int j7 = 0; int k7 = 0;
+bool f7 = false; string c7 = ""; string c8 = ""; bool g7 = false;
+if (i < s.Length) { c7 = "" +
+s[i]; }
+if (i < s.Length - 1) { c8 = c8
++ s[i] + s[i + 1]; }
+while ((!g7) && (k7 < 12))
+{
+if (O[k7].s == c8) { g7 =
+true; }
+else { k7++; }
+}
+if (g7) { p6(c8);
+Console.WriteLine(c8); writer_lex.WriteLine(c8); c8 = ""; i += 2; }
+else
+{
+k7 = 0;
+while ((!f7) && (j7 < 19))
+{
+if ((R[j7].s == c7) &&
+(c7 != ".")) { f7 = true; }
+else { j7++; }
+}
+if (f7) { p4(c7);
+Console.WriteLine(c7); writer_lex.WriteLine(c7); c7 = ""; i++; }
+else
+{
+while ((!f7) && (k7 <
+12))
+{
+if (O[k7].s == c7)
+{ f7 = true; }
+else { k7++; }
+}
+if (!f7) { er(); }
+else { p6(c7);
+Console.WriteLine(c7); writer_lex.WriteLine(c7); c7 = ""; i++; }
+}
+}
+}
+else { er(); }
+}
+else
+{
+if ((i < s.Length - 1) && (s[i + 1]
+>= '0') && (s[i + 1] <= '9'))
+{
+int j6 = i + 1; buf = buf +
+s[i];
+while ((j6 < s.Length) &&
+(s[j6] >= '0') && (s[j6] <= '9'))
+{
+buf = buf + s[j6]; j6++;
+}
+p3(buf);
+Console.WriteLine(buf); writer_lex.WriteLine(buf); buf = "";
+i = j6; int j7 = 0; int k7 = 0;
+bool f7 = false; string c7 = ""; string c8 = ""; bool g7 = false;
+if (i < s.Length) { c7 = "" +
+s[i]; }
+if (i < s.Length - 1) { c8 = c8
++ s[i] + s[i + 1]; }
+while ((!g7) && (k7 < 12))
+{
+if (O[k7].s == c8) { g7 =
+true; }
+else { k7++; }
+}
+if (g7) { p6(c8);
+Console.WriteLine(c8); writer_lex.WriteLine(c8); c8 = ""; i += 2; }
+else
+{
+k7 = 0;
+while ((!f7) && (j7 < 19))
+{
+if ((R[j7].s == c7) &&
+(c7 != ".")) { f7 = true; }
+else { j7++; }
+}
+if (f7) { p4(c7);
+Console.WriteLine(c7); writer_lex.WriteLine(c7); c7 = ""; i++; }
+else
+{
+while ((!f7) && (k7 <
+12))
+{
+if (O[k7].s == c7)
+{ f7 = true; }
+else { k7++; }
+}
+if (!f7) { er(); }
+else { p6(c7);
+Console.WriteLine(c7); writer_lex.WriteLine(c7); c7 = ""; i++; }
+}
+}
+}
+else { er(); }
+}
+}
+else
+{
+string c3 = ""; if (i < s.Length) { c3
+= "" + s[i]; }
+bool f3 = false; int j3 = 0; int k3 =
+0;
+while ((!f3) && (j3 < 19))
+{
+if (R[j3].s == c3) { f3 = true; }
+else { j3++; }
+}
+while ((!f3) && (k3 < 12))
+{
+if (O[k3].s == c3) { f3 = true; }
+else { k3++; }
+}
+if (f3) { p3(buf);
+Console.WriteLine(buf); writer_lex.WriteLine(buf); buf = ""; }
+else { er(); }
+}
+}
+}
+else
+{
+if ((i < s.Length) && (s[i] == '.'))
+{
+if ((i < s.Length - 1) && (s[i + 1] >= '0')
+&& (s[i + 1] <= '9'))
+{
+buf = buf + s[i]; i++;
+while ((i < s.Length) && (s[i] >= '0')
+&& (s[i] <= '9'))
+{
+buf = buf + s[i]; i++;
+}
+string c3 = ""; if (i < s.Length) { c3
+= "" + s[i]; }
+bool f3 = false; int j3 = 0; int k3 =
+0;
+while ((!f3) && (j3 < 19))
+{
+if ((R[j3].s == c3) && (c3 != "."))
+{ f3 = true; }
+else { j3++; }
+}
+while ((!f3) && (k3 < 12))
+{
+if (O[k3].s == c3) { f3 = true; }
+else { k3++; }
+}
+if (f3) { p3(buf);
+Console.WriteLine(buf); writer_lex.WriteLine(buf); buf = ""; }
+else { er(); }
+}
+else
+{
+if ((i < s.Length - 1) && (s[i + 1] ==
+'.'))
+{
+p9("" + s[i] + s[i + 1]);
+Console.WriteLine("" + s[i] + s[i +
+1]); writer_lex.WriteLine("" + s[i] + s[i + 1]); i += 2;
+}
+else { p9("" + s[i]);
+Console.WriteLine("" + s[i]); writer_lex.WriteLine("" + s[i]); i++; }
+}
+}
+else
+{
+if ((i < s.Length) && (s[i] == '{'))
+{
+Console.WriteLine("" + s[i]);
+writer_lex.WriteLine("" + s[i]);
+while ((i < s.Length) && (s[i] != '}'))
+{
+i++;
+}
+if ((i < s.Length) && (s[i] == '}')) {
+Console.WriteLine(s[i]); writer_lex.WriteLine("" + s[i]); }
+}
+else
+{
+if ((i < s.Length) && (s[i] == '<'))
+{
+if ((i < s.Length - 1) && ((s[i +
+1] == '=') || (s[i + 1] == '>')))
+{
+p6("" + s[i] + s[i + 1]);
+Console.WriteLine("" + s[i] + s[i + 1]); writer_lex.WriteLine("" + s[i] +
+s[i + 1]); i += 2;
+}
+else { p6("" + s[i]);
+Console.WriteLine("" + s[i]); writer_lex.WriteLine("" + s[i]); i++; }
+}
+else
+{
+if ((i < s.Length) && (s[i] ==
+'>'))
+{
+if ((i < s.Length - 1) && (s[i
++ 1] == '=')) { p6("" + s[i] + s[i + 1]); Console.WriteLine("" + s[i] + s[i
++ 1]); writer_lex.WriteLine("" + s[i] + s[i + 1]); i += 2; }
+else { p6("" + s[i]);
+Console.WriteLine("" + s[i]); writer_lex.WriteLine("" + s[i]); i++; }
+}
+else
+{
+if ((i < s.Length) && (s[i] ==
+':'))
+{
+if ((i < s.Length - 1) &&
+(s[i + 1] == '=')) { p6("" + s[i] + s[i + 1]); Console.WriteLine("" + s[i]
++ s[i + 1]); writer_lex.WriteLine("" + s[i] + s[i + 1]); i += 2; }
+else { p4("" + s[i]);
+Console.WriteLine("" + s[i]); writer_lex.WriteLine("" + s[i]); i++; }
+}
+else
+{
+string c = ""; if (i <
+s.Length) { c = "" + s[i]; }
+bool f = false; int j = 0;
+int k = 0;
+while ((!f) && (j < 19))
+{
+if (R[j].s == c) { f =
+true; }
+else { j++; }
+}
+if (f)
+{
+p4(c);
+Console.WriteLine(c); writer_lex.WriteLine(c); i++;
+}
+else
+{
+while ((!f) && (k <
+12))
+{
+if (O[k].s == c) {
+f = true; }
+else { k++; }
+}
+if (!f) { er(); }
+else { p6(c);
+Console.WriteLine(c); writer_lex.WriteLine(c); i++; }
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+static void v()
+{
+FileStream f = new
+FileStream("C:\\Users\\Lizard\\Documents\\Visual Studio
+2015\\Projects\\ConsoleApplication4\\ConsoleApplication4\\input.txt",
+FileMode.Open);
+StreamReader reader = new StreamReader(f); // создаём
+«потоковый читатель» и связываем его с файловым потоком
+string s = reader.ReadToEnd(); //считываем все данные с
+потока
+reader.Close(); //закрываем поток
+string[] stroki = s.Split(new char[] { '\n' });
+Console.WriteLine(s);
+S(s);
+if (err)
+{
+writer.WriteLine("Yest' oshibka(-i)");
+}
+else
+{
+writer.WriteLine("Net oshibok");
+}
+writer.WriteLine("");
+FileStream h = new
+FileStream("C:\\Users\\Lizard\\Documents\\Visual Studio
+2015\\Projects\\ConsoleApplication4\\ConsoleApplication4\\tablitsy.txt",
+FileMode.Create, FileAccess.Write);
+StreamWriter writer1 = new StreamWriter(h);
+int i = 0;
+writer1.WriteLine("Chisla:");
+while (N[i].s != null)
+{
+bool bo = false; int j = 0; string st = ""; bool bo1 =
+false;
+while (j < N[i].s.Length)
+{
+if (N[i].s[j] == '.')
+{
+bo1 = true; j++;
+}
+else
+{
+if ((N[i].s[j] == 'e') || (N[i].s[j] == 'E'))
+{
+bo = true; bo1 = false; j++;
+}
+else
+{
+j++;
+}
+}
+}
+if (bo) { st = " - chislo s plavayushchey tochkoy "; }
+else
+{
+if (bo1) { st = " - chislo s fiksirovannoy tochkoy
+"; }
+else { st = " - tseloye chislo "; }
+}
+writer1.WriteLine(N[i].id.ToString() + " " + N[i].s +
+st); i++;
+}
+writer1.WriteLine("Sluzhebnye slova:");
+for (int i1 = 0; i1 < 36; i1++)
+{
+writer1.WriteLine(W[i1].id.ToString() + " " + W[i1].s);
+}
+writer1.WriteLine("Razdeliteli:");
+for (int i1 = 0; i1 < 19; i1++)
+{
+writer1.WriteLine(R[i1].id.ToString() + " " + R[i1].s);
+}
+writer1.WriteLine("Operatsii:");
+for (int i1 = 0; i1 < 12; i1++)
+{
+writer1.WriteLine(O[i1].id.ToString() + " " + O[i1].s);
+}
+writer.Close();
+FileStream f1 = new
+FileStream("C:\\Users\\Lizard\\Documents\\Visual Studio
+2015\\Projects\\ConsoleApplication4\\ConsoleApplication4\\output.txt",
+FileMode.Open);
+StreamReader reader1 = new StreamReader(f1);
+string s1 = reader1.ReadToEnd();
+reader1.Close();
+//Console.WriteLine(s1);
+int o = 0; string s2 = ""; int k = 0; int max = 0;
+while (o < s1.Length)
+{
+if (s1[o] == 'I')
+{
+string s3 = "";
+s2 = s2 + s1[o]; o++;
+while ((s1[o] >= '0') && (s1[o] <= '9') && (o <
+s1.Length))
+{
+s2 = s2 + s1[o]; s3 = s3 + s1[o]; o++;
+}
+int a = o; k = Convert.ToInt16(s3);
+if (k > max) { max = k; }
+while ((s1[a] != 'W') && (a < s1.Length))
+{
+a++;
+}
+if (a < s1.Length)
+{
+s2 = s2 + s1[a]; a++;
+while ((s1[a] >= '0') && (s1[a] <= '9') && (a <
+s1.Length))
+{
+s2 = s2 + s1[a]; a++;
+}
+}
+}
+else
+{
+o++;
+}
+}
+int[] mas = new int[max]; o = 0;
+while (o < s2.Length)
+{
+if (s2[o] == 'I')
+{
+o++; string s4 = "";
+while ((o < s2.Length) && (s2[o] >= '0') && (s2[o]
+<= '9'))
+{
+s4 = s4 + s2[o]; o++;
+}
+int b = Convert.ToInt16(s4) - 1;
+o++; s4 = "";
+while ((o < s2.Length) && (s2[o] >= '0') && (s2[o]
+<= '9'))
+{
+s4 = s4 + s2[o]; o++;
+}
+int u = Convert.ToInt16(s4);
+if ((b < max) && (mas[b] == 0)) { mas[b] = u; }
+}
+else
+{
+o++;
+}
+}
+i = 0;
+writer1.WriteLine("Identifikatory:");
+while (I[i].s != null)
+{
+if ((mas[i] - 1 == 4) || (mas[i] - 1 == 5) || (mas[i] -
+1 == 6) || (mas[i] - 1 == 22) || (mas[i] - 1 == 28))
+{
+writer1.WriteLine(I[i].id.ToString() + " " + I[i].s
++ " - " + W[mas[i] - 1].s + " "); i++;
+}
+else
+{
+writer1.WriteLine(I[i].id.ToString() + " " + I[i].s
++ " "); i++;
+}
+}
+writer1.WriteLine("");
+writer1.Close();
+writer_lex.Close();
+}
+private void button1_Click(object sender, EventArgs e)
+{
+FileStream h = new
+FileStream("C:\\Users\\Lizard\\Documents\\Visual Studio
+2015\\Projects\\ConsoleApplication4\\ConsoleApplication4\\tablitsy.txt",
+FileMode.Open);
+StreamReader reader = new StreamReader(h);
+string s = reader.ReadToEnd();
+reader.Close();
+string[] stroki = s.Split(new char[] { '\n' });
+for(int i=0; i<stroki.Length; i++)
+{
+string s0 = "";
+for(int j=0; j<stroki[i].Length; j++)
+{
+if ((stroki[i][j] != '\n') && (stroki[i][j] != '\r'))
+{
+s0 = s0 + stroki[i][j];
+}
+}
+stroki[i] = s0;
+}
+int x = 0;
+while ((x < stroki.Length) && (stroki[x] != "Identifikatory:"))
+{
+x++;
+}
+x++;
+string s1 = "";
+while (x < stroki.Length)
+{
+s1 = s1 + stroki[x] + "\n";
+x++;
+}
+MessageBox.Show(s1);
+}
+private void button6_Click(object sender, EventArgs e)
+{
+string st = textBox1.Text;
+FileStream g = new
+FileStream("C:\\Users\\Lizard\\Documents\\Visual Studio
+2015\\Projects\\ConsoleApplication4\\ConsoleApplication4\\input.txt",
+FileMode.Create, FileAccess.Write);
+StreamWriter writer = new StreamWriter(g);
+writer.Write(st);
+writer.Close();
+v();
+FileStream h = new
+FileStream("C:\\Users\\Lizard\\Documents\\Visual Studio
+2015\\Projects\\ConsoleApplication4\\ConsoleApplication4\\output.txt",
+FileMode.Open);
+StreamReader reader = new StreamReader(h);
+string s = reader.ReadToEnd();
+reader.Close();
+string[] stroki = s.Split(new char[] { '\n' });
+for (int i = 0; i < stroki.Length; i++)
+{
+string s0 = "";
+for (int j = 0; j < stroki[i].Length; j++)
+{
+if ((stroki[i][j] != '\n') && (stroki[i][j] != '\r'))
+{
+s0 = s0 + stroki[i][j];
+}
+}
+stroki[i] = s0;
+}
+string s1 = "";
+for(int i=0; i<stroki.Length; i++)
+{
+s1 = s1 + stroki[i] + " ";
+}
+MessageBox.Show(st+"\n"+s1);
+}
+private void button2_Click(object sender, EventArgs e)
+{
+FileStream h = new
+FileStream("C:\\Users\\Lizard\\Documents\\Visual Studio
+2015\\Projects\\ConsoleApplication4\\ConsoleApplication4\\tablitsy.txt",
+FileMode.Open);
+StreamReader reader = new StreamReader(h);
+string s = reader.ReadToEnd();
+reader.Close();
+string[] stroki = s.Split(new char[] { '\n' });
+for (int i = 0; i < stroki.Length; i++)
+{
+string s0 = "";
+for (int j = 0; j < stroki[i].Length; j++)
+{
+if ((stroki[i][j] != '\n') && (stroki[i][j] != '\r'))
+{
+s0 = s0 + stroki[i][j];
+}
+}
+stroki[i] = s0;
+}
+int x = 0;
+while ((x < stroki.Length) && (stroki[x] != "Chisla:"))
+{
+x++;
+}
+x++;
+string s1 = "";
+while ((x < stroki.Length)&&(stroki[x]!= "Sluzhebnye slova:"))
+{
+s1 = s1 + stroki[x] + "\n";
+x++;
+}
+MessageBox.Show(s1);
+}
+private void button3_Click(object sender, EventArgs e)
+{
+FileStream h = new
+FileStream("C:\\Users\\Lizard\\Documents\\Visual Studio
+2015\\Projects\\ConsoleApplication4\\ConsoleApplication4\\tablitsy.txt",
+FileMode.Open);
+StreamReader reader = new StreamReader(h);
+string s = reader.ReadToEnd();
+reader.Close();
+string[] stroki = s.Split(new char[] { '\n' });
+for (int i = 0; i < stroki.Length; i++)
+{
+string s0 = "";
+for (int j = 0; j < stroki[i].Length; j++)
+{
+if ((stroki[i][j] != '\n') && (stroki[i][j] != '\r'))
+{
+s0 = s0 + stroki[i][j];
+}
+}
+stroki[i] = s0;
+}
+int x = 0;
+while ((x < stroki.Length) && (stroki[x] != "Sluzhebnye
+slova:"))
+{
+x++;
+}
+x++;
+string s1 = "";
+while ((x < stroki.Length) && (stroki[x] != "Razdeliteli:"))
+{
+s1 = s1 + stroki[x] + "\n";
+x++;
+}
+MessageBox.Show(s1);
+}
+private void button4_Click(object sender, EventArgs e)
+{
+FileStream h = new
+FileStream("C:\\Users\\Lizard\\Documents\\Visual Studio
+2015\\Projects\\ConsoleApplication4\\ConsoleApplication4\\tablitsy.txt",
+FileMode.Open);
+StreamReader reader = new StreamReader(h);
+string s = reader.ReadToEnd();
+reader.Close();
+string[] stroki = s.Split(new char[] { '\n' });
+for (int i = 0; i < stroki.Length; i++)
+{
+string s0 = "";
+for (int j = 0; j < stroki[i].Length; j++)
+{
+if ((stroki[i][j] != '\n') && (stroki[i][j] != '\r'))
+{
+s0 = s0 + stroki[i][j];
+}
+}
+stroki[i] = s0;
+}
+int x = 0;
+while ((x < stroki.Length) && (stroki[x] != "Razdeliteli:"))
+{
+x++;
+}
+x++;
+string s1 = "";
+while ((x < stroki.Length) && (stroki[x] != "Operatsii:"))
+{
+s1 = s1 + stroki[x] + "\n";
+x++;
+}
+MessageBox.Show(s1);
+}
+private void button5_Click(object sender, EventArgs e)
+{
+FileStream h = new
+FileStream("C:\\Users\\Lizard\\Documents\\Visual Studio
+2015\\Projects\\ConsoleApplication4\\ConsoleApplication4\\tablitsy.txt",
+FileMode.Open);
+StreamReader reader = new StreamReader(h);
+string s = reader.ReadToEnd();
+reader.Close();
+string[] stroki = s.Split(new char[] { '\n' });
+for (int i = 0; i < stroki.Length; i++)
+{
+string s0 = "";
+for (int j = 0; j < stroki[i].Length; j++)
+{
+if ((stroki[i][j] != '\n') && (stroki[i][j] != '\r'))
+{
+s0 = s0 + stroki[i][j];
+}
+}
+stroki[i] = s0;
+}
+int x = 0;
+while ((x < stroki.Length) && (stroki[x] != "Operatsii:"))
+{
+x++;
+}
+x++;
+string s1 = "";
+while ((x < stroki.Length) && (stroki[x] != "Identifikatory:"))
+{
+s1 = s1 + stroki[x] + "\n";
+x++;
+}
+MessageBox.Show(s1);
+}
+}
+}
