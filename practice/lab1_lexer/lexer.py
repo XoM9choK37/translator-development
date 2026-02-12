@@ -448,7 +448,7 @@ class RLexerGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("R Lexical Analyzer - Лексический анализатор языка R")
-        self.root.geometry("1400x800")
+        self.root.geometry("1600x900")  # Увеличил размер окна для шрифта 14
         
         # Настройка шрифтов - ВАЖНО: применяем к корневому окну
         self.setup_fonts()
@@ -457,15 +457,17 @@ class RLexerGUI:
         self.current_file = None
         
         self.setup_ui()
+        
+        # Удаляем автоматическую подсветку при загрузке
+        # Подсветка будет только после анализа или явного вызова
     
     def setup_fonts(self):
-        """Настройка шрифтов для всего приложения"""
-        # Получаем список доступных шрифтов
+        """Настройка шрифтов для всего приложения - размер 14"""
         from tkinter import font
         available_fonts = list(font.families())
         
         # Определяем лучший доступный шрифт
-        preferred_fonts = ['Ubuntu', 'DejaVu Sans', 'Liberation Sans', 'Arial', 'Helvetica', 'TkDefaultFont']
+        preferred_fonts = ['nimbus mono l', 'Ubuntu', 'DejaVu Sans', 'Liberation Sans', 'Arial', 'Helvetica', 'TkDefaultFont']
         
         self.default_font = 'TkDefaultFont'
         for pref_font in preferred_fonts:
@@ -473,71 +475,79 @@ class RLexerGUI:
                 self.default_font = pref_font
                 break
         
+        # РАЗМЕР ШРИФТА 14 ДЛЯ ВСЕГО ИНТЕРФЕЙСА
+        self.font_size = 11
+        self.small_font_size = 10
+        self.large_font_size = 12
+        
         # Создаем стили для ttk виджетов
         style = ttk.Style()
         
-        # Настраиваем стили для разных элементов
-        style.configure('.', font=(self.default_font, 10))
-        style.configure('TLabel', font=(self.default_font, 10))
-        style.configure('TButton', font=(self.default_font, 10))
-        style.configure('TFrame', font=(self.default_font, 10))
-        style.configure('TLabelframe', font=(self.default_font, 10, 'bold'))
-        style.configure('TLabelframe.Label', font=(self.default_font, 10, 'bold'))
-        style.configure('TNotebook', font=(self.default_font, 10))
-        style.configure('TNotebook.Tab', font=(self.default_font, 10))
-        style.configure('Treeview', font=(self.default_font, 10))
-        style.configure('Treeview.Heading', font=(self.default_font, 10, 'bold'))
+        # Настраиваем стили для разных элементов с размером 14
+        style.configure('.', font=(self.default_font, self.font_size))
+        style.configure('TLabel', font=(self.default_font, self.font_size))
+        style.configure('TButton', font=(self.default_font, self.font_size))
+        style.configure('TFrame', font=(self.default_font, self.font_size))
+        style.configure('TLabelframe', font=(self.default_font, self.font_size, 'bold'))
+        style.configure('TLabelframe.Label', font=(self.default_font, self.font_size, 'bold'))
+        style.configure('TNotebook', font=(self.default_font, self.font_size))
+        style.configure('TNotebook.Tab', font=(self.default_font, self.font_size))
+        style.configure('Treeview', font=(self.default_font, self.small_font_size))
+        style.configure('Treeview.Heading', font=(self.default_font, self.font_size, 'bold'))
         
         # Опции для root
-        self.root.option_add('*Font', (self.default_font, 10))
-        self.root.option_add('*TLabel.Font', (self.default_font, 10))
-        self.root.option_add('*TButton.Font', (self.default_font, 10))
-        self.root.option_add('*Menu.Font', (self.default_font, 10))
-        self.root.option_add('*Menubutton.Font', (self.default_font, 10))
+        self.root.option_add('*Font', (self.default_font, self.font_size))
+        self.root.option_add('*TLabel.Font', (self.default_font, self.font_size))
+        self.root.option_add('*TButton.Font', (self.default_font, self.font_size))
+        self.root.option_add('*Menu.Font', (self.default_font, self.font_size))
+        self.root.option_add('*Menubutton.Font', (self.default_font, self.font_size))
+        self.root.option_add('*Entry.Font', (self.default_font, self.font_size))
+        self.root.option_add('*Listbox.Font', (self.default_font, self.font_size))
+        self.root.option_add('*Spinbox.Font', (self.default_font, self.font_size))
     
     def setup_ui(self):
         """Создание пользовательского интерфейса"""
         
         # Главное меню
-        menubar = tk.Menu(self.root, font=(self.default_font, 10))
+        menubar = tk.Menu(self.root, font=(self.default_font, self.font_size))
         self.root.config(menu=menubar)
         
         # Меню Файл
-        file_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, 10))
-        menubar.add_cascade(label="Файл", menu=file_menu, font=(self.default_font, 10))
-        file_menu.add_command(label="Открыть файл", command=self.open_file, accelerator="Ctrl+O", font=(self.default_font, 10))
-        file_menu.add_command(label="Сохранить результат", command=self.save_results, accelerator="Ctrl+S", font=(self.default_font, 10))
+        file_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, self.font_size))
+        menubar.add_cascade(label="Файл", menu=file_menu, font=(self.default_font, self.font_size))
+        file_menu.add_command(label="Открыть файл", command=self.open_file, accelerator="Ctrl+O", font=(self.default_font, self.font_size))
+        file_menu.add_command(label="Сохранить результат", command=self.save_results, accelerator="Ctrl+S", font=(self.default_font, self.font_size))
         file_menu.add_separator()
-        file_menu.add_command(label="Выход", command=self.root.quit, font=(self.default_font, 10))
+        file_menu.add_command(label="Выход", command=self.root.quit, font=(self.default_font, self.font_size))
         
         # Меню Анализ
-        analyze_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, 10))
-        menubar.add_cascade(label="Анализ", menu=analyze_menu, font=(self.default_font, 10))
-        analyze_menu.add_command(label="Запустить анализ", command=self.analyze, accelerator="F5", font=(self.default_font, 10))
-        analyze_menu.add_command(label="Очистить всё", command=self.clear_all, font=(self.default_font, 10))
+        analyze_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, self.font_size))
+        menubar.add_cascade(label="Анализ", menu=analyze_menu, font=(self.default_font, self.font_size))
+        analyze_menu.add_command(label="Запустить анализ", command=self.analyze, accelerator="F5", font=(self.default_font, self.font_size))
+        analyze_menu.add_command(label="Очистить всё", command=self.clear_all, font=(self.default_font, self.font_size))
         
         # Меню Просмотр
-        view_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, 10))
-        menubar.add_cascade(label="Просмотр", menu=view_menu, font=(self.default_font, 10))
-        view_menu.add_command(label="Полная последовательность лексем", command=self.show_full_sequence, font=(self.default_font, 10))
-        view_menu.add_command(label="Программа с лексемами", command=self.show_lexeme_program, font=(self.default_font, 10))
+        view_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, self.font_size))
+        menubar.add_cascade(label="Просмотр", menu=view_menu, font=(self.default_font, self.font_size))
+        view_menu.add_command(label="Полная последовательность лексем", command=self.show_full_sequence, font=(self.default_font, self.font_size))
+        view_menu.add_command(label="Программа с лексемами", command=self.show_lexeme_program, font=(self.default_font, self.font_size))
         
         # Меню Примеры
-        examples_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, 10))
-        menubar.add_cascade(label="Примеры", menu=examples_menu, font=(self.default_font, 10))
-        examples_menu.add_command(label="Корректный код R", command=self.load_correct_example, font=(self.default_font, 10))
-        examples_menu.add_command(label="Ошибки в числах", command=self.load_number_errors_example, font=(self.default_font, 10))
+        examples_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, self.font_size))
+        menubar.add_cascade(label="Примеры", menu=examples_menu, font=(self.default_font, self.font_size))
+        examples_menu.add_command(label="Корректный код R", command=lambda: self.load_example("correct"), font=(self.default_font, self.font_size))
+        examples_menu.add_command(label="Ошибки в числах", command=lambda: self.load_example("errors"), font=(self.default_font, self.font_size))
         examples_menu.add_separator()
-        examples_menu.add_command(label="Множественные точки", command=self.load_multiple_dots_example, font=(self.default_font, 10))
-        examples_menu.add_command(label="Буквы в числах", command=self.load_letters_in_numbers_example, font=(self.default_font, 10))
-        examples_menu.add_command(label="Корректные числа", command=self.load_correct_numbers_example, font=(self.default_font, 10))
+        examples_menu.add_command(label="Множественные точки", command=lambda: self.load_example("dots"), font=(self.default_font, self.font_size))
+        examples_menu.add_command(label="Буквы в числах", command=lambda: self.load_example("letters"), font=(self.default_font, self.font_size))
+        examples_menu.add_command(label="Корректные числа", command=lambda: self.load_example("correct_numbers"), font=(self.default_font, self.font_size))
         
         # Меню Справка
-        help_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, 10))
-        menubar.add_cascade(label="Справка", menu=help_menu, font=(self.default_font, 10))
-        help_menu.add_command(label="О программе", command=self.show_about, font=(self.default_font, 10))
-        help_menu.add_command(label="Синтаксис R", command=self.show_r_syntax, font=(self.default_font, 10))
-        help_menu.add_command(label="Типы ошибок", command=self.show_error_types, font=(self.default_font, 10))
+        help_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, self.font_size))
+        menubar.add_cascade(label="Справка", menu=help_menu, font=(self.default_font, self.font_size))
+        help_menu.add_command(label="О программе", command=self.show_about, font=(self.default_font, self.font_size))
+        help_menu.add_command(label="Синтаксис R", command=self.show_r_syntax, font=(self.default_font, self.font_size))
+        help_menu.add_command(label="Типы ошибок", command=self.show_error_types, font=(self.default_font, self.font_size))
         
         # Привязка горячих клавиш
         self.root.bind('<Control-o>', lambda e: self.open_file())
@@ -545,7 +555,7 @@ class RLexerGUI:
         self.root.bind('<F5>', lambda e: self.analyze())
         
         # Основной контейнер
-        main_frame = ttk.Frame(self.root, padding="10")
+        main_frame = ttk.Frame(self.root, padding="15")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         # Настройка весов для растягивания
@@ -556,16 +566,16 @@ class RLexerGUI:
         main_frame.rowconfigure(1, weight=1)
         
         # Верхняя панель с информацией
-        info_frame = ttk.LabelFrame(main_frame, text="Информация", padding="5")
-        info_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
+        info_frame = ttk.LabelFrame(main_frame, text="Информация", padding="10")
+        info_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 15))
         info_frame.columnconfigure(1, weight=1)
         
-        ttk.Label(info_frame, text="Файл:", font=(self.default_font, 10)).grid(row=0, column=0, sticky=tk.W)
-        self.file_label = ttk.Label(info_frame, text="Не выбран", foreground="gray", font=(self.default_font, 10))
+        ttk.Label(info_frame, text="Файл:", font=(self.default_font, self.font_size, 'bold')).grid(row=0, column=0, sticky=tk.W, padx=5)
+        self.file_label = ttk.Label(info_frame, text="Не выбран", foreground="gray", font=(self.default_font, self.font_size))
         self.file_label.grid(row=0, column=1, sticky=tk.W, padx=(5, 20))
         
-        ttk.Label(info_frame, text="Статус:", font=(self.default_font, 10)).grid(row=0, column=2, sticky=tk.W, padx=(20, 0))
-        self.status_label = ttk.Label(info_frame, text="Готов к работе", foreground="green", font=(self.default_font, 10, 'bold'))
+        ttk.Label(info_frame, text="Статус:", font=(self.default_font, self.font_size, 'bold')).grid(row=0, column=2, sticky=tk.W, padx=(20, 0))
+        self.status_label = ttk.Label(info_frame, text="Готов к работе", foreground="green", font=(self.default_font, self.font_size, 'bold'))
         self.status_label.grid(row=0, column=3, sticky=tk.W, padx=5)
         
         # Кнопки для просмотра
@@ -573,46 +583,46 @@ class RLexerGUI:
         button_frame.grid(row=0, column=4, padx=(50, 0))
         
         ttk.Button(button_frame, text="Последовательность лексем", 
-                  command=self.show_full_sequence).pack(side=tk.LEFT, padx=2)
+                  command=self.show_full_sequence).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Программа с лексемами", 
-                  command=self.show_lexeme_program).pack(side=tk.LEFT, padx=2)
+                  command=self.show_lexeme_program).pack(side=tk.LEFT, padx=5)
         
         # Левая панель - исходный код
-        left_frame = ttk.LabelFrame(main_frame, text="Исходный код на R", padding="5")
-        left_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(0, 5))
+        left_frame = ttk.LabelFrame(main_frame, text="Исходный код на R", padding="10")
+        left_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(0, 10))
         left_frame.columnconfigure(0, weight=1)
         left_frame.rowconfigure(0, weight=1)
         
-        # Текстовое поле с явным указанием шрифта
+        # Текстовое поле с явным указанием шрифта размером 14
         self.code_text = scrolledtext.ScrolledText(
             left_frame, 
             wrap=tk.WORD, 
-            font=(self.default_font, 11),
+            font=(self.default_font, self.font_size),
             background='#ffffff',
             foreground='#000000',
             insertbackground='black'
         )
         self.code_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # Настройка подсветки синтаксиса с явным указанием шрифтов
-        self.code_text.tag_configure("keyword", foreground="#0000ff", font=(self.default_font, 11, 'bold'))
-        self.code_text.tag_configure("string", foreground="#008000", font=(self.default_font, 11))
-        self.code_text.tag_configure("comment", foreground="#808080", font=(self.default_font, 11, 'italic'))
-        self.code_text.tag_configure("number", foreground="#ff8c00", font=(self.default_font, 11, 'bold'))
-        self.code_text.tag_configure("operation", foreground="#ff00ff", font=(self.default_font, 11, 'bold'))
-        self.code_text.tag_configure("error", foreground="#ff0000", background="#fff0f0", font=(self.default_font, 11, 'bold'))
+        # Настройка подсветки синтаксиса с явным указанием шрифтов размером 14
+        self.code_text.tag_configure("keyword", foreground="#0000ff", font=(self.default_font, self.font_size, 'bold'))
+        self.code_text.tag_configure("string", foreground="#008000", font=(self.default_font, self.font_size))
+        self.code_text.tag_configure("comment", foreground="#808080", font=(self.default_font, self.font_size, 'italic'))
+        self.code_text.tag_configure("number", foreground="#ff8c00", font=(self.default_font, self.font_size, 'bold'))
+        self.code_text.tag_configure("operation", foreground="#ff00ff", font=(self.default_font, self.font_size, 'bold'))
+        self.code_text.tag_configure("error", foreground="#ff0000", background="#fff0f0", font=(self.default_font, self.font_size, 'bold'))
         
         # Кнопки управления
         control_frame = ttk.Frame(left_frame)
-        control_frame.grid(row=1, column=0, pady=10)
+        control_frame.grid(row=1, column=0, pady=15)
         
-        ttk.Button(control_frame, text="Открыть файл", command=self.open_file).pack(side=tk.LEFT, padx=5)
-        ttk.Button(control_frame, text="Запустить анализ", command=self.analyze).pack(side=tk.LEFT, padx=5)
-        ttk.Button(control_frame, text="Очистить", command=self.clear_code).pack(side=tk.LEFT, padx=5)
+        ttk.Button(control_frame, text="Открыть файл", command=self.open_file, width=15).pack(side=tk.LEFT, padx=5)
+        ttk.Button(control_frame, text="Запустить анализ", command=self.analyze, width=15).pack(side=tk.LEFT, padx=5)
+        ttk.Button(control_frame, text="Очистить", command=self.clear_code, width=15).pack(side=tk.LEFT, padx=5)
         
         # Правая панель с вкладками результатов
-        right_frame = ttk.LabelFrame(main_frame, text="Результаты анализа", padding="5")
-        right_frame.grid(row=1, column=1, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(5, 0))
+        right_frame = ttk.LabelFrame(main_frame, text="Результаты анализа", padding="10")
+        right_frame.grid(row=1, column=1, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(10, 0))
         right_frame.columnconfigure(0, weight=1)
         right_frame.rowconfigure(0, weight=1)
         
@@ -629,7 +639,7 @@ class RLexerGUI:
         self.tokens_text = scrolledtext.ScrolledText(
             self.tokens_frame,
             wrap=tk.WORD,
-            font=(self.default_font, 10),
+            font=(self.default_font, self.small_font_size),
             background='#ffffff'
         )
         self.tokens_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -643,7 +653,7 @@ class RLexerGUI:
         self.tables_text = scrolledtext.ScrolledText(
             self.tables_frame,
             wrap=tk.WORD,
-            font=(self.default_font, 10),
+            font=(self.default_font, self.small_font_size),
             background='#ffffff'
         )
         self.tables_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -657,7 +667,7 @@ class RLexerGUI:
         self.errors_text = scrolledtext.ScrolledText(
             self.errors_frame,
             wrap=tk.WORD,
-            font=(self.default_font, 10),
+            font=(self.default_font, self.small_font_size),
             background='#fff0f0',
             foreground='#ff0000'
         )
@@ -673,12 +683,12 @@ class RLexerGUI:
             self.identifiers_frame,
             columns=('ID', 'Имя'),
             show='headings',
-            height=20
+            height=15
         )
         self.identifiers_tree.heading('ID', text='ID')
         self.identifiers_tree.heading('Имя', text='Имя')
-        self.identifiers_tree.column('ID', width=100)
-        self.identifiers_tree.column('Имя', width=300)
+        self.identifiers_tree.column('ID', width=120, minwidth=80)
+        self.identifiers_tree.column('Имя', width=350, minwidth=200)
         
         scrollbar_id = ttk.Scrollbar(self.identifiers_frame, orient=tk.VERTICAL, command=self.identifiers_tree.yview)
         self.identifiers_tree.configure(yscrollcommand=scrollbar_id.set)
@@ -696,16 +706,16 @@ class RLexerGUI:
             self.numbers_frame,
             columns=('ID', 'Значение', 'Тип', 'Статус'),
             show='headings',
-            height=20
+            height=15
         )
         self.numbers_tree.heading('ID', text='ID')
         self.numbers_tree.heading('Значение', text='Значение')
         self.numbers_tree.heading('Тип', text='Тип')
         self.numbers_tree.heading('Статус', text='Статус')
-        self.numbers_tree.column('ID', width=100)
-        self.numbers_tree.column('Значение', width=150)
-        self.numbers_tree.column('Тип', width=150)
-        self.numbers_tree.column('Статус', width=200)
+        self.numbers_tree.column('ID', width=120, minwidth=80)
+        self.numbers_tree.column('Значение', width=180, minwidth=120)
+        self.numbers_tree.column('Тип', width=180, minwidth=120)
+        self.numbers_tree.column('Статус', width=250, minwidth=180)
         
         scrollbar_num = ttk.Scrollbar(self.numbers_frame, orient=tk.VERTICAL, command=self.numbers_tree.yview)
         self.numbers_tree.configure(yscrollcommand=scrollbar_num.set)
@@ -714,8 +724,8 @@ class RLexerGUI:
         scrollbar_num.grid(row=0, column=1, sticky=(tk.N, tk.S))
         
         # Нижняя панель статистики
-        stats_frame = ttk.LabelFrame(main_frame, text="Статистика", padding="5")
-        stats_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(10, 0))
+        stats_frame = ttk.LabelFrame(main_frame, text="Статистика", padding="10")
+        stats_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(15, 0))
         stats_frame.columnconfigure(1, weight=1)
         stats_frame.columnconfigure(3, weight=1)
         stats_frame.columnconfigure(5, weight=1)
@@ -732,42 +742,19 @@ class RLexerGUI:
         ]
         
         for i, (label, value, col) in enumerate(stats_items):
-            ttk.Label(stats_frame, text=label, font=(self.default_font, 10)).grid(row=0, column=col, sticky=tk.W, padx=(20 if i > 0 else 0, 0))
-            self.stats_labels[label] = ttk.Label(stats_frame, text=value, foreground="blue", font=(self.default_font, 10, 'bold'))
+            ttk.Label(stats_frame, text=label, font=(self.default_font, self.font_size, 'bold')).grid(row=0, column=col, sticky=tk.W, padx=(20 if i > 0 else 0, 5))
+            self.stats_labels[label] = ttk.Label(stats_frame, text=value, foreground="blue", font=(self.default_font, self.font_size, 'bold'))
             self.stats_labels[label].grid(row=0, column=col + 1, sticky=tk.W, padx=(5, 20))
         
         # Прогресс-бар
-        self.progress = ttk.Progressbar(stats_frame, mode='indeterminate', length=200)
+        self.progress = ttk.Progressbar(stats_frame, mode='indeterminate', length=250)
         self.progress.grid(row=0, column=14, padx=(50, 0))
         self.progress.grid_remove()
     
-    def open_file(self):
-        """Открытие файла с кодом R"""
-        filename = filedialog.askopenfilename(
-            title="Выберите файл с кодом R",
-            filetypes=[("R files", "*.r"), ("R files", "*.R"), ("Text files", "*.txt"), ("All files", "*.*")]
-        )
-        
-        if filename:
-            try:
-                with open(filename, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                self.code_text.delete(1.0, tk.END)
-                self.code_text.insert(1.0, content)
-                self.current_file = filename
-                self.file_label.config(text=Path(filename).name, foreground="black")
-                self.status_label.config(text="Файл загружен", foreground="green")
-                
-                # Подсветка синтаксиса
-                self.highlight_syntax()
-                
-            except Exception as e:
-                messagebox.showerror("Ошибка", f"Не удалось открыть файл:\n{str(e)}")
-    
-    def load_correct_example(self):
-        """Загрузка корректного примера кода R"""
-        example_code = """# Пример корректного кода на R
+    def load_example(self, example_type):
+        """Загрузка примеров без автоматической подсветки"""
+        examples = {
+            "correct": """# Пример корректного кода на R
 calculate_stats <- function(data) {
     mean_val <- mean(data, na.rm = TRUE)
     sd_val <- sd(data, na.rm = TRUE)
@@ -788,17 +775,9 @@ calculate_stats <- function(data) {
 x <- 123.45
 y <- 2.5e-3
 z <- 100
-w <- 1.6E-19
-"""
-        self.code_text.delete(1.0, tk.END)
-        self.code_text.insert(1.0, example_code)
-        self.highlight_syntax()
-        self.current_file = None
-        self.file_label.config(text="Пример: корректный код", foreground="green")
-    
-    def load_correct_numbers_example(self):
-        """Загрузка примера с корректными числами"""
-        example_code = """# Примеры КОРРЕКТНЫХ чисел в R
+w <- 1.6E-19""",
+            
+            "correct_numbers": """# Примеры КОРРЕКТНЫХ чисел в R
 
 # 1. Целые числа
 a <- 42
@@ -823,17 +802,9 @@ n <- 123.e-4     # Корректно - заканчивается точкой
 # 4. Разделители и операции
 x <- c(1, 2, 3)   # Точка как разделитель
 y <- list$element  # Точка как оператор доступа
-z <- 1..2          # Две точки - оператор диапазона
-"""
-        self.code_text.delete(1.0, tk.END)
-        self.code_text.insert(1.0, example_code)
-        self.highlight_syntax()
-        self.current_file = None
-        self.file_label.config(text="Пример: корректные числа", foreground="green")
-    
-    def load_number_errors_example(self):
-        """Загрузка примера с ошибками в числах"""
-        example_code = """# Примеры НЕКОРРЕКТНЫХ чисел в R
+z <- 1..2          # Две точки - оператор диапазона""",
+            
+            "errors": """# Примеры НЕКОРРЕКТНЫХ чисел в R
 
 # 1. Множественные точки (ЭТО ОШИБКИ)
 a <- 123.23.3      # ОШИБКА: несколько десятичных разделителей
@@ -858,17 +829,9 @@ m <- 123.45        # КОРРЕКТНО: число с фиксированно�
 n <- 2.5e-3        # КОРРЕКТНО: экспоненциальная запись
 o <- 100           # КОРРЕКТНО: целое число
 p <- .5            # КОРРЕКТНО: начинается с точки
-q <- 123.          # КОРРЕКТНО: заканчивается точкой
-"""
-        self.code_text.delete(1.0, tk.END)
-        self.code_text.insert(1.0, example_code)
-        self.highlight_syntax()
-        self.current_file = None
-        self.file_label.config(text="Пример: ошибки в числах", foreground="orange")
-    
-    def load_multiple_dots_example(self):
-        """Загрузка примера с множественными точками"""
-        example_code = """# Примеры использования точки в R
+q <- 123.          # КОРРЕКТНО: заканчивается точкой""",
+            
+            "dots": """# Примеры использования точки в R
 
 # НЕКОРРЕКТНОЕ использование точки (ОШИБКИ)
 price <- 123.23.3          # ОШИБКА! Две точки
@@ -885,17 +848,9 @@ correct4 <- 2.5e-3        # OK - экспонента (число)
 # Точка как разделитель и оператор
 x <- list(a=1, b=2)      # OK - точка не часть числа
 y <- x$a                  # OK - оператор доступа
-z <- 1..2                 # OK - оператор диапазона (две точки)
-"""
-        self.code_text.delete(1.0, tk.END)
-        self.code_text.insert(1.0, example_code)
-        self.highlight_syntax()
-        self.current_file = None
-        self.file_label.config(text="Пример: использование точки", foreground="orange")
-    
-    def load_letters_in_numbers_example(self):
-        """Загрузка примера с буквами в числах"""
-        example_code = """# Примеры букв в числах
+z <- 1..2                 # OK - оператор диапазона (две точки)""",
+            
+            "letters": """# Примеры букв в числах
 
 # НЕКОРРЕКТНЫЕ числа с буквами (ОШИБКИ)
 a <- 123a                # ОШИБКА! 'a' не может быть в числе
@@ -919,16 +874,56 @@ m <- 0.5              # OK - число с точкой
 # КОРРЕКТНЫЕ идентификаторы (не числа)
 var123 <- 10          # OK - идентификатор, начинается с буквы
 x2 <- 20              # OK - идентификатор
-test_a <- 30          # OK - идентификатор
-"""
-        self.code_text.delete(1.0, tk.END)
-        self.code_text.insert(1.0, example_code)
-        self.highlight_syntax()
-        self.current_file = None
-        self.file_label.config(text="Пример: буквы в числах", foreground="orange")
+test_a <- 30          # OK - идентификатор"""
+        }
+        
+        if example_type in examples:
+            self.code_text.delete(1.0, tk.END)
+            self.code_text.insert(1.0, examples[example_type])
+            self.current_file = None
+            
+            # НЕ вызываем подсветку синтаксиса при загрузке примера!
+            # Удаляем все теги подсветки
+            for tag in ["keyword", "string", "comment", "number", "operation", "error"]:
+                self.code_text.tag_remove(tag, 1.0, tk.END)
+            
+            name_map = {
+                "correct": "Пример: корректный код",
+                "correct_numbers": "Пример: корректные числа",
+                "errors": "Пример: ошибки в числах",
+                "dots": "Пример: использование точки",
+                "letters": "Пример: буквы в числах"
+            }
+            self.file_label.config(text=name_map.get(example_type, "Пример"), foreground="green")
+    
+    def open_file(self):
+        """Открытие файла с кодом R"""
+        filename = filedialog.askopenfilename(
+            title="Выберите файл с кодом R",
+            filetypes=[("R files", "*.r"), ("R files", "*.R"), ("Text files", "*.txt"), ("All files", "*.*")]
+        )
+        
+        if filename:
+            try:
+                with open(filename, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                self.code_text.delete(1.0, tk.END)
+                self.code_text.insert(1.0, content)
+                self.current_file = filename
+                self.file_label.config(text=Path(filename).name, foreground="black")
+                self.status_label.config(text="Файл загружен", foreground="green")
+                
+                # НЕ вызываем подсветку синтаксиса при загрузке файла!
+                # Удаляем все теги подсветки
+                for tag in ["keyword", "string", "comment", "number", "operation", "error"]:
+                    self.code_text.tag_remove(tag, 1.0, tk.END)
+                
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Не удалось открыть файл:\n{str(e)}")
     
     def highlight_syntax(self):
-        """Простая подсветка синтаксиса"""
+        """Подсветка синтаксиса - вызывается ТОЛЬКО после анализа"""
         # Удаляем старые теги
         for tag in ["keyword", "string", "comment", "number", "operation", "error"]:
             self.code_text.tag_remove(tag, 1.0, tk.END)
@@ -958,11 +953,11 @@ test_a <- 30          # OK - идентификатор
                 self.code_text.tag_add("keyword", start, end)
                 start = end
         
-        # Подсветка ошибок - множественные точки и буквы в числах
-        for match in re.finditer(r'\d*\.\d+\.\d+|\d+\.\d*\.\d*|\d+[a-zA-Z]+\d*|\d*[a-zA-Z]+\d+[a-zA-Z]*\d*', content):
+        # Подсветка чисел (корректных)
+        for match in re.finditer(r'\b\d+\.?\d*(?:[eE][+-]?\d+)?\b|\b\.\d+(?:[eE][+-]?\d+)?\b|\b\d+\.\b', content):
             start = f"1.0 + {match.start()} chars"
             end = f"1.0 + {match.end()} chars"
-            self.code_text.tag_add("error", start, end)
+            self.code_text.tag_add("number", start, end)
     
     def highlight_errors(self):
         """Подсветка ошибочных конструкций в исходном коде"""
@@ -1000,7 +995,10 @@ test_a <- 30          # OK - идентификатор
             # Обновляем статистику
             self.update_statistics()
             
-            # Подсвечиваем ошибки в исходном коде
+            # Сначала делаем обычную подсветку синтаксиса
+            self.highlight_syntax()
+            
+            # Затем подсвечиваем ошибки поверх
             self.highlight_errors()
             
             if self.lexer.errors:
@@ -1029,14 +1027,14 @@ test_a <- 30          # OK - идентификатор
         # Создаем новое окно
         full_window = tk.Toplevel(self.root)
         full_window.title("Полная последовательность лексем")
-        full_window.geometry("1000x600")
+        full_window.geometry("1200x700")
         full_window.configure(bg='#f0f0f0')
         
         # Применяем шрифты к новому окну
-        full_window.option_add('*Font', (self.default_font, 10))
+        full_window.option_add('*Font', (self.default_font, self.small_font_size))
         
         # Основной фрейм
-        main_frame = ttk.Frame(full_window, padding="10")
+        main_frame = ttk.Frame(full_window, padding="15")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         full_window.columnconfigure(0, weight=1)
         full_window.rowconfigure(0, weight=1)
@@ -1045,8 +1043,8 @@ test_a <- 30          # OK - идентификатор
         
         # Заголовок
         title_label = ttk.Label(main_frame, text="ПОЛНАЯ ПОСЛЕДОВАТЕЛЬНОСТЬ ЛЕКСЕМ", 
-                               font=(self.default_font, 14, 'bold'))
-        title_label.grid(row=0, column=0, pady=(0, 10))
+                               font=(self.default_font, self.large_font_size, 'bold'))
+        title_label.grid(row=0, column=0, pady=(0, 15))
         
         # Текстовое поле с прокруткой
         text_frame = ttk.Frame(main_frame)
@@ -1057,7 +1055,7 @@ test_a <- 30          # OK - идентификатор
         full_text = scrolledtext.ScrolledText(
             text_frame,
             wrap=tk.WORD,
-            font=(self.default_font, 10),
+            font=(self.default_font, self.small_font_size),
             background='#ffffff'
         )
         full_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -1119,7 +1117,7 @@ test_a <- 30          # OK - идентификатор
             full_text.insert(tk.END, f"{type_name:20s}: {count:4d} лексем\n")
         
         # Кнопка закрытия
-        ttk.Button(main_frame, text="Закрыть", command=full_window.destroy).grid(row=2, column=0, pady=10)
+        ttk.Button(main_frame, text="Закрыть", command=full_window.destroy, width=15).grid(row=2, column=0, pady=15)
     
     def show_lexeme_program(self):
         """Отображение программы с заменой на лексемы"""
@@ -1130,14 +1128,14 @@ test_a <- 30          # OK - идентификатор
         # Создаем новое окно
         lex_window = tk.Toplevel(self.root)
         lex_window.title("Программа с лексемами")
-        lex_window.geometry("1000x700")
+        lex_window.geometry("1200x800")
         lex_window.configure(bg='#f0f0f0')
         
         # Применяем шрифты к новому окну
-        lex_window.option_add('*Font', (self.default_font, 10))
+        lex_window.option_add('*Font', (self.default_font, self.small_font_size))
         
         # Основной фрейм
-        main_frame = ttk.Frame(lex_window, padding="10")
+        main_frame = ttk.Frame(lex_window, padding="15")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         lex_window.columnconfigure(0, weight=1)
         lex_window.rowconfigure(0, weight=1)
@@ -1146,8 +1144,8 @@ test_a <- 30          # OK - идентификатор
         
         # Заголовок
         title_label = ttk.Label(main_frame, text="ПРОГРАММА С ЗАМЕНОЙ НА ЛЕКСЕМЫ", 
-                               font=(self.default_font, 14, 'bold'))
-        title_label.grid(row=0, column=0, pady=(0, 10))
+                               font=(self.default_font, self.large_font_size, 'bold'))
+        title_label.grid(row=0, column=0, pady=(0, 15))
         
         # Создаем PanedWindow для разделения на две части
         paned = ttk.PanedWindow(main_frame, orient=tk.VERTICAL)
@@ -1160,12 +1158,12 @@ test_a <- 30          # OK - идентификатор
         top_frame.rowconfigure(0, weight=1)
         
         ttk.Label(top_frame, text="Исходный код с заменой на лексемы:", 
-                 font=(self.default_font, 11, 'bold')).grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
+                 font=(self.default_font, self.font_size, 'bold')).grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
         
         lex_text = scrolledtext.ScrolledText(
             top_frame,
             wrap=tk.WORD,
-            font=(self.default_font, 11),
+            font=(self.default_font, self.font_size),
             background='#ffffff'
         )
         lex_text.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -1174,10 +1172,10 @@ test_a <- 30          # OK - идентификатор
         bottom_frame = ttk.Frame(paned)
         paned.add(bottom_frame, weight=1)
         bottom_frame.columnconfigure(0, weight=1)
-        bottom_frame.rowconfigure(0, weight=1)
+        bottom_frame.rowconfigure(1, weight=1)
         
         ttk.Label(bottom_frame, text="Соответствие лексем:", 
-                 font=(self.default_font, 11, 'bold')).grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
+                 font=(self.default_font, self.font_size, 'bold')).grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
         
         # Создаем Notebook для нижней части
         bottom_notebook = ttk.Notebook(bottom_frame)
@@ -1192,7 +1190,7 @@ test_a <- 30          # OK - идентификатор
         kw_text = scrolledtext.ScrolledText(
             kw_frame,
             wrap=tk.WORD,
-            font=(self.default_font, 10),
+            font=(self.default_font, self.small_font_size),
             background='#ffffff'
         )
         kw_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -1209,7 +1207,7 @@ test_a <- 30          # OK - идентификатор
         id_text = scrolledtext.ScrolledText(
             id_frame,
             wrap=tk.WORD,
-            font=(self.default_font, 10),
+            font=(self.default_font, self.small_font_size),
             background='#ffffff'
         )
         id_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -1226,7 +1224,7 @@ test_a <- 30          # OK - идентификатор
         num_text = scrolledtext.ScrolledText(
             num_frame,
             wrap=tk.WORD,
-            font=(self.default_font, 10),
+            font=(self.default_font, self.small_font_size),
             background='#ffffff'
         )
         num_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -1247,12 +1245,12 @@ test_a <- 30          # OK - идентификатор
         
         # Кнопки
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=2, column=0, pady=10)
+        button_frame.grid(row=2, column=0, pady=15)
         
         ttk.Button(button_frame, text="Сохранить в файл", 
-                  command=lambda: self.save_lexeme_program(lex_program)).pack(side=tk.LEFT, padx=5)
+                  command=lambda: self.save_lexeme_program(lex_program), width=20).pack(side=tk.LEFT, padx=10)
         ttk.Button(button_frame, text="Закрыть", 
-                  command=lex_window.destroy).pack(side=tk.LEFT, padx=5)
+                  command=lex_window.destroy, width=15).pack(side=tk.LEFT, padx=10)
     
     def save_lexeme_program(self, content):
         """Сохранение программы с лексемами в файл"""
@@ -1507,6 +1505,9 @@ test_a <- 30          # OK - идентификатор
         self.code_text.delete(1.0, tk.END)
         self.current_file = None
         self.file_label.config(text="Не выбран", foreground="gray")
+        # Удаляем все теги подсветки
+        for tag in ["keyword", "string", "comment", "number", "operation", "error"]:
+            self.code_text.tag_remove(tag, 1.0, tk.END)
     
     def clear_all(self):
         """Полная очистка всех полей"""
@@ -1530,13 +1531,13 @@ test_a <- 30          # OK - идентификатор
     def show_about(self):
         """Информация о программе"""
         about_text = f"""
-R Lexical Analyzer v2.3
+R Lexical Analyzer v2.4
 Лексический анализатор для языка R
 
 Разработано на Python с использованием Tkinter
 В рамках курса по системному программированию
 
-Шрифт: {self.default_font}
+Шрифт: {self.default_font} (размер {self.font_size})
 
 ВОЗМОЖНОСТИ:
 • Полный лексический анализ языка R
@@ -1647,12 +1648,12 @@ def main():
     root = tk.Tk()
     
     # Устанавливаем шрифты глобально через option_add
-    root.option_add('*Font', 'TkDefaultFont 10')
+    root.option_add('*Font', 'TkDefaultFont 14')
     
     app = RLexerGUI(root)
     
-    # Загружаем пример с корректными числами для демонстрации
-    app.load_correct_numbers_example()
+    # Загружаем пример с корректными числами для демонстрации, но без подсветки
+    app.load_example("correct_numbers")
     
     root.mainloop()
 
