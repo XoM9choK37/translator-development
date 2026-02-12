@@ -40,6 +40,7 @@ class RLexer:
         
         self.current_line = 1
         self.current_column = 1
+        self.original_code = ""  # для хранения исходного кода
         
         self._init_tables()
     
@@ -170,6 +171,7 @@ class RLexer:
     def tokenize(self, code):
         """Основной метод лексического анализа с расширенной проверкой ошибок"""
         self.reset()
+        self.original_code = code
         
         i = 0
         length = len(code)
@@ -381,6 +383,66 @@ class RLexer:
                 self.current_column += 1
         
         return self.token_sequence
+    
+    def generate_lexeme_program(self):
+        """Генерирует текст программы с заменой на лексемы"""
+        if not self.token_sequence:
+            return "Нет данных для отображения. Сначала выполните анализ."
+        
+        lines = {}
+        for token in self.token_sequence:
+            if token.line not in lines:
+                lines[token.line] = []
+            lines[token.line].append(token)
+        
+        result = []
+        result.append("=" * 80)
+        result.append("ПРОГРАММА С ЗАМЕНОЙ НА ЛЕКСЕМЫ")
+        result.append("=" * 80)
+        result.append("")
+        
+        for line_num in sorted(lines.keys()):
+            line_tokens = lines[line_num]
+            line_text = ""
+            current_pos = 1
+            
+            for token in sorted(line_tokens, key=lambda x: x.column):
+                # Добавляем пробелы для выравнивания
+                if token.column > current_pos:
+                    line_text += " " * (token.column - current_pos)
+                
+                # Заменяем значение на код лексемы
+                if token.lex_type == LexemType.ERROR:
+                    line_text += f"[{token.code}:{token.value}]"
+                else:
+                    line_text += token.code
+                
+                current_pos = token.column + len(token.value)
+            
+            result.append(f"Строка {line_num:3d}: {line_text}")
+        
+        result.append("")
+        result.append("=" * 80)
+        result.append("СООТВЕТСТВИЕ ЛЕКСЕМ:")
+        result.append("-" * 40)
+        
+        # Добавляем соответствие лексем
+        result.append("\nКлючевые слова:")
+        for word, idx in sorted(self.keywords.items(), key=lambda x: x[1])[:10]:
+            result.append(f"  W{idx:4d} : {word}")
+        
+        result.append("\nИдентификаторы:")
+        for name, idx in sorted(self.identifiers.items(), key=lambda x: x[1])[:10]:
+            result.append(f"  I{idx:4d} : {name}")
+        
+        result.append("\nЧисла:")
+        for num, idx in sorted(self.numbers.items(), key=lambda x: x[1])[:10]:
+            result.append(f"  N{idx:4d} : {num}")
+        
+        if len(self.keywords) > 10 or len(self.identifiers) > 10 or len(self.numbers) > 10:
+            result.append("\n... и другие (см. полные таблицы)")
+        
+        return '\n'.join(result)
 
 class RLexerGUI:
     def __init__(self, root):
@@ -388,56 +450,94 @@ class RLexerGUI:
         self.root.title("R Lexical Analyzer - Лексический анализатор языка R")
         self.root.geometry("1400x800")
         
-        # Установка иконки и темы
-        self.root.configure(bg='#f0f0f0')
+        # Настройка шрифтов - ВАЖНО: применяем к корневому окну
+        self.setup_fonts()
         
         self.lexer = RLexer()
         self.current_file = None
         
         self.setup_ui()
+    
+    def setup_fonts(self):
+        """Настройка шрифтов для всего приложения"""
+        # Получаем список доступных шрифтов
+        from tkinter import font
+        available_fonts = list(font.families())
         
+        # Определяем лучший доступный шрифт
+        preferred_fonts = ['Ubuntu', 'DejaVu Sans', 'Liberation Sans', 'Arial', 'Helvetica', 'TkDefaultFont']
+        
+        self.default_font = 'TkDefaultFont'
+        for pref_font in preferred_fonts:
+            if pref_font in available_fonts:
+                self.default_font = pref_font
+                break
+        
+        # Создаем стили для ttk виджетов
+        style = ttk.Style()
+        
+        # Настраиваем стили для разных элементов
+        style.configure('.', font=(self.default_font, 10))
+        style.configure('TLabel', font=(self.default_font, 10))
+        style.configure('TButton', font=(self.default_font, 10))
+        style.configure('TFrame', font=(self.default_font, 10))
+        style.configure('TLabelframe', font=(self.default_font, 10, 'bold'))
+        style.configure('TLabelframe.Label', font=(self.default_font, 10, 'bold'))
+        style.configure('TNotebook', font=(self.default_font, 10))
+        style.configure('TNotebook.Tab', font=(self.default_font, 10))
+        style.configure('Treeview', font=(self.default_font, 10))
+        style.configure('Treeview.Heading', font=(self.default_font, 10, 'bold'))
+        
+        # Опции для root
+        self.root.option_add('*Font', (self.default_font, 10))
+        self.root.option_add('*TLabel.Font', (self.default_font, 10))
+        self.root.option_add('*TButton.Font', (self.default_font, 10))
+        self.root.option_add('*Menu.Font', (self.default_font, 10))
+        self.root.option_add('*Menubutton.Font', (self.default_font, 10))
+    
     def setup_ui(self):
         """Создание пользовательского интерфейса"""
         
         # Главное меню
-        menubar = tk.Menu(self.root)
+        menubar = tk.Menu(self.root, font=(self.default_font, 10))
         self.root.config(menu=menubar)
         
         # Меню Файл
-        file_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Файл", menu=file_menu)
-        file_menu.add_command(label="Открыть файл", command=self.open_file, accelerator="Ctrl+O")
-        file_menu.add_command(label="Сохранить результат", command=self.save_results, accelerator="Ctrl+S")
+        file_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, 10))
+        menubar.add_cascade(label="Файл", menu=file_menu, font=(self.default_font, 10))
+        file_menu.add_command(label="Открыть файл", command=self.open_file, accelerator="Ctrl+O", font=(self.default_font, 10))
+        file_menu.add_command(label="Сохранить результат", command=self.save_results, accelerator="Ctrl+S", font=(self.default_font, 10))
         file_menu.add_separator()
-        file_menu.add_command(label="Выход", command=self.root.quit)
+        file_menu.add_command(label="Выход", command=self.root.quit, font=(self.default_font, 10))
         
         # Меню Анализ
-        analyze_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Анализ", menu=analyze_menu)
-        analyze_menu.add_command(label="Запустить анализ", command=self.analyze, accelerator="F5")
-        analyze_menu.add_command(label="Очистить всё", command=self.clear_all)
-        
-        # Меню Примеры
-        examples_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Примеры", menu=examples_menu)
-        examples_menu.add_command(label="Корректный код R", command=self.load_correct_example)
-        examples_menu.add_command(label="Ошибки в числах", command=self.load_number_errors_example)
-        examples_menu.add_separator()
-        examples_menu.add_command(label="Множественные точки", command=self.load_multiple_dots_example)
-        examples_menu.add_command(label="Буквы в числах", command=self.load_letters_in_numbers_example)
-        examples_menu.add_command(label="Корректные числа", command=self.load_correct_numbers_example)
+        analyze_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, 10))
+        menubar.add_cascade(label="Анализ", menu=analyze_menu, font=(self.default_font, 10))
+        analyze_menu.add_command(label="Запустить анализ", command=self.analyze, accelerator="F5", font=(self.default_font, 10))
+        analyze_menu.add_command(label="Очистить всё", command=self.clear_all, font=(self.default_font, 10))
         
         # Меню Просмотр
-        view_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Просмотр", menu=view_menu)
-        view_menu.add_command(label="Полная последовательность лексем", command=self.show_full_sequence)
+        view_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, 10))
+        menubar.add_cascade(label="Просмотр", menu=view_menu, font=(self.default_font, 10))
+        view_menu.add_command(label="Полная последовательность лексем", command=self.show_full_sequence, font=(self.default_font, 10))
+        view_menu.add_command(label="Программа с лексемами", command=self.show_lexeme_program, font=(self.default_font, 10))
+        
+        # Меню Примеры
+        examples_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, 10))
+        menubar.add_cascade(label="Примеры", menu=examples_menu, font=(self.default_font, 10))
+        examples_menu.add_command(label="Корректный код R", command=self.load_correct_example, font=(self.default_font, 10))
+        examples_menu.add_command(label="Ошибки в числах", command=self.load_number_errors_example, font=(self.default_font, 10))
+        examples_menu.add_separator()
+        examples_menu.add_command(label="Множественные точки", command=self.load_multiple_dots_example, font=(self.default_font, 10))
+        examples_menu.add_command(label="Буквы в числах", command=self.load_letters_in_numbers_example, font=(self.default_font, 10))
+        examples_menu.add_command(label="Корректные числа", command=self.load_correct_numbers_example, font=(self.default_font, 10))
         
         # Меню Справка
-        help_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Справка", menu=help_menu)
-        help_menu.add_command(label="О программе", command=self.show_about)
-        help_menu.add_command(label="Синтаксис R", command=self.show_r_syntax)
-        help_menu.add_command(label="Типы ошибок", command=self.show_error_types)
+        help_menu = tk.Menu(menubar, tearoff=0, font=(self.default_font, 10))
+        menubar.add_cascade(label="Справка", menu=help_menu, font=(self.default_font, 10))
+        help_menu.add_command(label="О программе", command=self.show_about, font=(self.default_font, 10))
+        help_menu.add_command(label="Синтаксис R", command=self.show_r_syntax, font=(self.default_font, 10))
+        help_menu.add_command(label="Типы ошибок", command=self.show_error_types, font=(self.default_font, 10))
         
         # Привязка горячих клавиш
         self.root.bind('<Control-o>', lambda e: self.open_file())
@@ -460,21 +560,22 @@ class RLexerGUI:
         info_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
         info_frame.columnconfigure(1, weight=1)
         
-        # Стандартные шрифты Ubuntu
-        default_font = ('Ubuntu', 10)
-        bold_font = ('Ubuntu', 10, 'bold')
-        
-        ttk.Label(info_frame, text="Файл:", font=default_font).grid(row=0, column=0, sticky=tk.W)
-        self.file_label = ttk.Label(info_frame, text="Не выбран", foreground="gray", font=default_font)
+        ttk.Label(info_frame, text="Файл:", font=(self.default_font, 10)).grid(row=0, column=0, sticky=tk.W)
+        self.file_label = ttk.Label(info_frame, text="Не выбран", foreground="gray", font=(self.default_font, 10))
         self.file_label.grid(row=0, column=1, sticky=tk.W, padx=(5, 20))
         
-        ttk.Label(info_frame, text="Статус:", font=default_font).grid(row=0, column=2, sticky=tk.W, padx=(20, 0))
-        self.status_label = ttk.Label(info_frame, text="Готов к работе", foreground="green", font=bold_font)
+        ttk.Label(info_frame, text="Статус:", font=(self.default_font, 10)).grid(row=0, column=2, sticky=tk.W, padx=(20, 0))
+        self.status_label = ttk.Label(info_frame, text="Готов к работе", foreground="green", font=(self.default_font, 10, 'bold'))
         self.status_label.grid(row=0, column=3, sticky=tk.W, padx=5)
         
-        # Кнопка для просмотра полной последовательности
-        ttk.Button(info_frame, text="Полная последовательность лексем", 
-                  command=self.show_full_sequence).grid(row=0, column=4, padx=(50, 0))
+        # Кнопки для просмотра
+        button_frame = ttk.Frame(info_frame)
+        button_frame.grid(row=0, column=4, padx=(50, 0))
+        
+        ttk.Button(button_frame, text="Последовательность лексем", 
+                  command=self.show_full_sequence).pack(side=tk.LEFT, padx=2)
+        ttk.Button(button_frame, text="Программа с лексемами", 
+                  command=self.show_lexeme_program).pack(side=tk.LEFT, padx=2)
         
         # Левая панель - исходный код
         left_frame = ttk.LabelFrame(main_frame, text="Исходный код на R", padding="5")
@@ -482,32 +583,32 @@ class RLexerGUI:
         left_frame.columnconfigure(0, weight=1)
         left_frame.rowconfigure(0, weight=1)
         
-        # Стандартный шрифт для Ubuntu
+        # Текстовое поле с явным указанием шрифта
         self.code_text = scrolledtext.ScrolledText(
             left_frame, 
             wrap=tk.WORD, 
-            font=('Ubuntu', 11),
+            font=(self.default_font, 11),
             background='#ffffff',
             foreground='#000000',
             insertbackground='black'
         )
         self.code_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # Настройка подсветки синтаксиса с Ubuntu шрифтами
-        self.code_text.tag_configure("keyword", foreground="#0000ff", font=('Ubuntu', 11, 'bold'))
-        self.code_text.tag_configure("string", foreground="#008000", font=('Ubuntu', 11))
-        self.code_text.tag_configure("comment", foreground="#808080", font=('Ubuntu', 11, 'italic'))
-        self.code_text.tag_configure("number", foreground="#ff8c00", font=('Ubuntu', 11, 'bold'))
-        self.code_text.tag_configure("operation", foreground="#ff00ff", font=('Ubuntu', 11, 'bold'))
-        self.code_text.tag_configure("error", foreground="#ff0000", background="#fff0f0", font=('Ubuntu', 11, 'bold'))
+        # Настройка подсветки синтаксиса с явным указанием шрифтов
+        self.code_text.tag_configure("keyword", foreground="#0000ff", font=(self.default_font, 11, 'bold'))
+        self.code_text.tag_configure("string", foreground="#008000", font=(self.default_font, 11))
+        self.code_text.tag_configure("comment", foreground="#808080", font=(self.default_font, 11, 'italic'))
+        self.code_text.tag_configure("number", foreground="#ff8c00", font=(self.default_font, 11, 'bold'))
+        self.code_text.tag_configure("operation", foreground="#ff00ff", font=(self.default_font, 11, 'bold'))
+        self.code_text.tag_configure("error", foreground="#ff0000", background="#fff0f0", font=(self.default_font, 11, 'bold'))
         
         # Кнопки управления
-        button_frame = ttk.Frame(left_frame)
-        button_frame.grid(row=1, column=0, pady=10)
+        control_frame = ttk.Frame(left_frame)
+        control_frame.grid(row=1, column=0, pady=10)
         
-        ttk.Button(button_frame, text="Открыть файл", command=self.open_file).pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Запустить анализ", command=self.analyze).pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Очистить", command=self.clear_code).pack(side=tk.LEFT, padx=5)
+        ttk.Button(control_frame, text="Открыть файл", command=self.open_file).pack(side=tk.LEFT, padx=5)
+        ttk.Button(control_frame, text="Запустить анализ", command=self.analyze).pack(side=tk.LEFT, padx=5)
+        ttk.Button(control_frame, text="Очистить", command=self.clear_code).pack(side=tk.LEFT, padx=5)
         
         # Правая панель с вкладками результатов
         right_frame = ttk.LabelFrame(main_frame, text="Результаты анализа", padding="5")
@@ -528,7 +629,7 @@ class RLexerGUI:
         self.tokens_text = scrolledtext.ScrolledText(
             self.tokens_frame,
             wrap=tk.WORD,
-            font=('Ubuntu', 10),
+            font=(self.default_font, 10),
             background='#ffffff'
         )
         self.tokens_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -542,7 +643,7 @@ class RLexerGUI:
         self.tables_text = scrolledtext.ScrolledText(
             self.tables_frame,
             wrap=tk.WORD,
-            font=('Ubuntu', 10),
+            font=(self.default_font, 10),
             background='#ffffff'
         )
         self.tables_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -556,7 +657,7 @@ class RLexerGUI:
         self.errors_text = scrolledtext.ScrolledText(
             self.errors_frame,
             wrap=tk.WORD,
-            font=('Ubuntu', 10),
+            font=(self.default_font, 10),
             background='#fff0f0',
             foreground='#ff0000'
         )
@@ -631,8 +732,8 @@ class RLexerGUI:
         ]
         
         for i, (label, value, col) in enumerate(stats_items):
-            ttk.Label(stats_frame, text=label, font=('Ubuntu', 10)).grid(row=0, column=col, sticky=tk.W, padx=(20 if i > 0 else 0, 0))
-            self.stats_labels[label] = ttk.Label(stats_frame, text=value, foreground="blue", font=('Ubuntu', 10, 'bold'))
+            ttk.Label(stats_frame, text=label, font=(self.default_font, 10)).grid(row=0, column=col, sticky=tk.W, padx=(20 if i > 0 else 0, 0))
+            self.stats_labels[label] = ttk.Label(stats_frame, text=value, foreground="blue", font=(self.default_font, 10, 'bold'))
             self.stats_labels[label].grid(row=0, column=col + 1, sticky=tk.W, padx=(5, 20))
         
         # Прогресс-бар
@@ -931,6 +1032,9 @@ test_a <- 30          # OK - идентификатор
         full_window.geometry("1000x600")
         full_window.configure(bg='#f0f0f0')
         
+        # Применяем шрифты к новому окну
+        full_window.option_add('*Font', (self.default_font, 10))
+        
         # Основной фрейм
         main_frame = ttk.Frame(full_window, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -941,7 +1045,7 @@ test_a <- 30          # OK - идентификатор
         
         # Заголовок
         title_label = ttk.Label(main_frame, text="ПОЛНАЯ ПОСЛЕДОВАТЕЛЬНОСТЬ ЛЕКСЕМ", 
-                               font=('Ubuntu', 14, 'bold'))
+                               font=(self.default_font, 14, 'bold'))
         title_label.grid(row=0, column=0, pady=(0, 10))
         
         # Текстовое поле с прокруткой
@@ -953,7 +1057,7 @@ test_a <- 30          # OK - идентификатор
         full_text = scrolledtext.ScrolledText(
             text_frame,
             wrap=tk.WORD,
-            font=('Ubuntu', 10),
+            font=(self.default_font, 10),
             background='#ffffff'
         )
         full_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -1016,6 +1120,155 @@ test_a <- 30          # OK - идентификатор
         
         # Кнопка закрытия
         ttk.Button(main_frame, text="Закрыть", command=full_window.destroy).grid(row=2, column=0, pady=10)
+    
+    def show_lexeme_program(self):
+        """Отображение программы с заменой на лексемы"""
+        if not self.lexer.token_sequence:
+            messagebox.showwarning("Предупреждение", "Нет данных для отображения! Сначала выполните анализ.")
+            return
+        
+        # Создаем новое окно
+        lex_window = tk.Toplevel(self.root)
+        lex_window.title("Программа с лексемами")
+        lex_window.geometry("1000x700")
+        lex_window.configure(bg='#f0f0f0')
+        
+        # Применяем шрифты к новому окну
+        lex_window.option_add('*Font', (self.default_font, 10))
+        
+        # Основной фрейм
+        main_frame = ttk.Frame(lex_window, padding="10")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        lex_window.columnconfigure(0, weight=1)
+        lex_window.rowconfigure(0, weight=1)
+        main_frame.columnconfigure(0, weight=1)
+        main_frame.rowconfigure(1, weight=1)
+        
+        # Заголовок
+        title_label = ttk.Label(main_frame, text="ПРОГРАММА С ЗАМЕНОЙ НА ЛЕКСЕМЫ", 
+                               font=(self.default_font, 14, 'bold'))
+        title_label.grid(row=0, column=0, pady=(0, 10))
+        
+        # Создаем PanedWindow для разделения на две части
+        paned = ttk.PanedWindow(main_frame, orient=tk.VERTICAL)
+        paned.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        # Верхняя часть - программа с лексемами
+        top_frame = ttk.Frame(paned)
+        paned.add(top_frame, weight=2)
+        top_frame.columnconfigure(0, weight=1)
+        top_frame.rowconfigure(0, weight=1)
+        
+        ttk.Label(top_frame, text="Исходный код с заменой на лексемы:", 
+                 font=(self.default_font, 11, 'bold')).grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
+        
+        lex_text = scrolledtext.ScrolledText(
+            top_frame,
+            wrap=tk.WORD,
+            font=(self.default_font, 11),
+            background='#ffffff'
+        )
+        lex_text.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        # Нижняя часть - соответствие лексем
+        bottom_frame = ttk.Frame(paned)
+        paned.add(bottom_frame, weight=1)
+        bottom_frame.columnconfigure(0, weight=1)
+        bottom_frame.rowconfigure(0, weight=1)
+        
+        ttk.Label(bottom_frame, text="Соответствие лексем:", 
+                 font=(self.default_font, 11, 'bold')).grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
+        
+        # Создаем Notebook для нижней части
+        bottom_notebook = ttk.Notebook(bottom_frame)
+        bottom_notebook.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        # Вкладка с ключевыми словами
+        kw_frame = ttk.Frame(bottom_notebook)
+        bottom_notebook.add(kw_frame, text="Ключевые слова")
+        kw_frame.columnconfigure(0, weight=1)
+        kw_frame.rowconfigure(0, weight=1)
+        
+        kw_text = scrolledtext.ScrolledText(
+            kw_frame,
+            wrap=tk.WORD,
+            font=(self.default_font, 10),
+            background='#ffffff'
+        )
+        kw_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        for word, idx in sorted(self.lexer.keywords.items(), key=lambda x: x[1]):
+            kw_text.insert(tk.END, f"W{idx:4d} : {word}\n")
+        
+        # Вкладка с идентификаторами
+        id_frame = ttk.Frame(bottom_notebook)
+        bottom_notebook.add(id_frame, text="Идентификаторы")
+        id_frame.columnconfigure(0, weight=1)
+        id_frame.rowconfigure(0, weight=1)
+        
+        id_text = scrolledtext.ScrolledText(
+            id_frame,
+            wrap=tk.WORD,
+            font=(self.default_font, 10),
+            background='#ffffff'
+        )
+        id_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        for name, idx in sorted(self.lexer.identifiers.items(), key=lambda x: x[1]):
+            id_text.insert(tk.END, f"I{idx:4d} : {name}\n")
+        
+        # Вкладка с числами
+        num_frame = ttk.Frame(bottom_notebook)
+        bottom_notebook.add(num_frame, text="Числа")
+        num_frame.columnconfigure(0, weight=1)
+        num_frame.rowconfigure(0, weight=1)
+        
+        num_text = scrolledtext.ScrolledText(
+            num_frame,
+            wrap=tk.WORD,
+            font=(self.default_font, 10),
+            background='#ffffff'
+        )
+        num_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        for num, idx in sorted(self.lexer.numbers.items(), key=lambda x: x[1]):
+            num_type = self.classify_number(num)
+            num_text.insert(tk.END, f"N{idx:4d} : {num:15s} - {num_type}\n")
+        
+        # Генерируем программу с лексемами
+        lex_program = self.lexer.generate_lexeme_program()
+        lex_text.insert(1.0, lex_program)
+        
+        # Делаем текст только для чтения
+        lex_text.config(state=tk.DISABLED)
+        kw_text.config(state=tk.DISABLED)
+        id_text.config(state=tk.DISABLED)
+        num_text.config(state=tk.DISABLED)
+        
+        # Кнопки
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=2, column=0, pady=10)
+        
+        ttk.Button(button_frame, text="Сохранить в файл", 
+                  command=lambda: self.save_lexeme_program(lex_program)).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Закрыть", 
+                  command=lex_window.destroy).pack(side=tk.LEFT, padx=5)
+    
+    def save_lexeme_program(self, content):
+        """Сохранение программы с лексемами в файл"""
+        filename = filedialog.asksaveasfilename(
+            title="Сохранить программу с лексемами",
+            defaultextension=".txt",
+            filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+        )
+        
+        if filename:
+            try:
+                with open(filename, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                messagebox.showinfo("Успех", f"Программа сохранена в файл:\n{filename}")
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Не удалось сохранить файл:\n{str(e)}")
     
     def update_results(self):
         """Обновление всех результатов в интерфейсе"""
@@ -1237,6 +1490,12 @@ test_a <- 30          # OK - идентификатор
                             f.write(f"      └─ {token.error_msg}\n")
                     
                     f.write("\n\n" + self.format_tables())
+                    
+                    # Добавляем программу с лексемами
+                    f.write("\n\n" + "=" * 80 + "\n")
+                    f.write("ПРОГРАММА С ЗАМЕНОЙ НА ЛЕКСЕМЫ\n")
+                    f.write("=" * 80 + "\n\n")
+                    f.write(self.lexer.generate_lexeme_program())
                 
                 messagebox.showinfo("Успех", f"Результаты сохранены в файл:\n{filename}")
                 
@@ -1270,12 +1529,14 @@ test_a <- 30          # OK - идентификатор
     
     def show_about(self):
         """Информация о программе"""
-        about_text = """
-R Lexical Analyzer v2.2
+        about_text = f"""
+R Lexical Analyzer v2.3
 Лексический анализатор для языка R
 
 Разработано на Python с использованием Tkinter
 В рамках курса по системному программированию
+
+Шрифт: {self.default_font}
 
 ВОЗМОЖНОСТИ:
 • Полный лексический анализ языка R
@@ -1284,6 +1545,7 @@ R Lexical Analyzer v2.2
 • Поддержка корректных чисел: 2.5e-3, .5, 123., .5e2
 • Подсветка ошибок в исходном коде
 • Полная последовательность лексем в отдельном окне
+• Программа с заменой на лексемы
 • Детальная классификация ошибок
 • Примеры для тестирования
 
@@ -1293,7 +1555,7 @@ R Lexical Analyzer v2.2
     
     def show_r_syntax(self):
         """Справка по синтаксису R"""
-        syntax_text = """
+        syntax_text = f"""
 СИНТАКСИС ЯЗЫКА R
 
 Ключевые слова:
@@ -1321,7 +1583,7 @@ if, else, while, for, function, return, TRUE, FALSE, NULL, NA, Inf, NaN
 'в одинарных кавычках' или "в двойных кавычках"
 
 Разделители:
-, ; : :: ::: ( ) [ ] [[ ]] { } $ @
+, ; : :: ::: ( ) [ ] [[ ]] {{ }} $ @
 
 ЧИСЛА В R:
 
@@ -1346,7 +1608,7 @@ if, else, while, for, function, return, TRUE, FALSE, NULL, NA, Inf, NaN
     
     def show_error_types(self):
         """Справка по типам ошибок"""
-        error_text = """
+        error_text = f"""
 ТИПЫ ОШИБОК, ОТЛАВЛИВАЕМЫХ АНАЛИЗАТОРОМ:
 
 1. НЕКОРРЕКТНОЕ ИСПОЛЬЗОВАНИЕ ТОЧКИ (E4):
@@ -1384,21 +1646,8 @@ if, else, while, for, function, return, TRUE, FALSE, NULL, NA, Inf, NaN
 def main():
     root = tk.Tk()
     
-    # Проверяем доступные шрифты и используем системный шрифт по умолчанию
-    try:
-        # Пробуем установить Ubuntu шрифт
-        from tkinter import font
-        available_fonts = font.families()
-        if 'Ubuntu' in available_fonts:
-            default_font = 'Ubuntu'
-        elif 'DejaVu Sans' in available_fonts:
-            default_font = 'DejaVu Sans'
-        elif 'Liberation Sans' in available_fonts:
-            default_font = 'Liberation Sans'
-        else:
-            default_font = 'TkDefaultFont'
-    except:
-        default_font = 'TkDefaultFont'
+    # Устанавливаем шрифты глобально через option_add
+    root.option_add('*Font', 'TkDefaultFont 10')
     
     app = RLexerGUI(root)
     
