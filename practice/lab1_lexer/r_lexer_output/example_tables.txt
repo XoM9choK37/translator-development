@@ -1,0 +1,152 @@
+=== ТАБЛИЦЫ ЛЕКСЕМ ===
+
+1. СЛУЖЕБНЫЕ СЛОВА:
+--------------------------------------------------
+  W  1 : if
+  W  2 : else
+  W  3 : while
+  W  4 : for
+  W  5 : in
+  W  6 : next
+  W  7 : break
+  W  8 : function
+  W  9 : return
+  W 10 : TRUE
+  W 11 : FALSE
+  W 12 : NULL
+  W 13 : NA
+  W 14 : Inf
+  W 15 : NaN
+  W 16 : repeat
+  W 17 : switch
+  W 18 : try
+  W 19 : tryCatch
+  W 20 : stop
+  W 21 : warning
+  W 22 : require
+  W 23 : library
+  W 24 : source
+  W 25 : setwd
+  W 26 : getwd
+  W 27 : list
+  W 28 : matrix
+  W 29 : data.frame
+  W 30 : c
+  W 31 : cbind
+  W 32 : rbind
+  W 33 : length
+  W 34 : nrow
+  W 35 : ncol
+  W 36 : summary
+  W 37 : print
+  W 38 : cat
+  W 39 : paste
+  W 40 : sprintf
+  W 41 : subset
+  W 42 : merge
+  W 43 : apply
+  W 44 : lapply
+  W 45 : sapply
+  W 46 : tapply
+  W 47 : mapply
+  W 48 : aggregate
+  W 49 : plot
+  W 50 : ggplot
+
+2. РАЗДЕЛИТЕЛИ:
+--------------------------------------------------
+  R  1 : .
+  R  2 : ,
+  R  3 : ;
+  R  4 : :
+  R  5 : ::
+  R  6 : :::
+  R  7 : (
+  R  8 : )
+  R  9 : [
+  R 10 : ]
+  R 11 : [[
+  R 12 : ]]
+  R 13 : {
+  R 14 : }
+  R 15 : "'"
+  R 16 : "
+  R 17 : `
+  R 18 : $
+  R 19 : @
+  R 20 : \\
+  R 21 : \n
+  R 22 : \t
+  R 23 :  
+  R 24 : \r
+
+3. ОПЕРАЦИИ:
+--------------------------------------------------
+  O  1 : +
+  O  2 : -
+  O  3 : *
+  O  4 : /
+  O  5 : ^
+  O  6 : **
+  O  7 : %%
+  O  8 : %/%
+  O  9 : %*%
+  O 10 : %in%
+  O 11 : <
+  O 12 : >
+  O 13 : <=
+  O 14 : >=
+  O 15 : ==
+  O 16 : !=
+  O 17 : =
+  O 18 : <-
+  O 19 : <<-
+  O 20 : ->
+  O 21 : ->>
+  O 22 : &
+  O 23 : |
+  O 24 : !
+  O 25 : &&
+  O 26 : ||
+  O 27 : ~
+  O 28 : :
+  O 29 : $
+  O 30 : @
+  O 31 : %>%
+  O 32 : %T>%
+  O 33 : %<>%
+  O 34 : %$%
+
+4. ИДЕНТИФИКАТОРЫ:
+--------------------------------------------------
+  I  1 : calculate_stats
+  I  2 : data
+  I  3 : mean_val
+  I  4 : mean
+  I  5 : na.rm
+  I  6 : sd_val
+  I  7 : sd
+  I  8 : result
+  I  9 : n
+  I 10 : x
+  I 11 : y
+  I 12 : rnorm
+  I 13 : t
+  I 14 : stats
+  I 15 : z
+  I 16 : w
+
+5. ЧИСЛА:
+--------------------------------------------------
+  N  1 : 0
+  N  2 : 1
+  N  3 : 2
+  N  4 : 3
+  N  5 : 4
+  N  6 : 5
+  N  7 : 12.
+  N  8 : 3.14159
+  N  9 : 2.5e-3
+
+6. СТРОКИ:
+--------------------------------------------------
