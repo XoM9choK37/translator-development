@@ -135,7 +135,7 @@ class RLexer:
             return False, "Пустое число"
         
         if '..' in num_str:
-            return False, "Некорректное использование точки - множественные точки подряд"
+            return False, "Множественное использование точки"
         
         if num_str.count('.') > 1:
             if 'e' in num_str.lower() or 'E' in num_str.lower():
@@ -152,13 +152,11 @@ class RLexer:
             else:
                 return False, "Некорректное использование точки - число содержит несколько десятичных разделителей"
         
-        has_valid_e = False
         for i, char in enumerate(num_str):
             if char.isalpha():
                 if char.lower() == 'e' and i > 0 and i < len(num_str) - 1:
                     next_char = num_str[i + 1]
                     if next_char.isdigit() or next_char in '+-':
-                        has_valid_e = True
                         continue
                 return False, f"Некорректное построение числа - содержит букву '{char}'"
         
@@ -244,28 +242,52 @@ class RLexer:
                     self.token_sequence.append(Token("E1", string, start_line, start_column, LexemType.ERROR, error_msg))
                 continue
 
-            if char == '.' and i + 1 < length and code[i + 1] == '.':
-                self.token_sequence.append(Token("R19", "..", self.current_line, start_column, LexemType.DELIMITER))
-                i += 2
-                self.current_column += 2
-                continue
-
-            if char.isalpha() or char == '.' or char == '_':
-                word = ''
+            if char == '.' and i + 2 < length and code[i + 1] == '.' and code[i + 2] == '.':
                 start_line = self.current_line
                 start_col = self.current_column
-
-                while i < length and (code[i].isalnum() or code[i] in '._'):
-                    word += code[i]
-                    i += 1
-                    self.current_column += 1
-
-                kw_id = self.is_keyword(word)
-                if kw_id:
-                    self.token_sequence.append(Token(f"W{kw_id}", word, start_line, start_col, LexemType.KEYWORD))
+                
+                prev_is_digit = i > 0 and code[i - 1].isdigit()
+                j = i + 3
+                dot_seq = "..."
+                while j < length and (code[j].isalnum() or code[j] == '.'):
+                    dot_seq += code[j]
+                    j += 1
+                
+                if prev_is_digit:
+                    error_msg = f"Множественное использование точки"
+                    self.errors.append(f"Строка {start_line}, колонка {start_col}: {error_msg} - '{dot_seq}'")
+                    self.token_sequence.append(Token("E4", dot_seq, start_line, start_col, LexemType.ERROR, error_msg))
+                    i = j
+                    self.current_column = start_col + len(dot_seq)
                 else:
-                    token_id = self.add_identifier(word)
-                    self.token_sequence.append(Token(f"I{token_id}", word, start_line, start_col, LexemType.IDENTIFIER))
+                    token_id = self.add_identifier(dot_seq)
+                    self.token_sequence.append(Token(f"I{token_id}", dot_seq, start_line, start_col, LexemType.IDENTIFIER))
+                    i = j
+                    self.current_column = start_col + len(dot_seq)
+                continue
+
+            if char == '.' and i + 1 < length and code[i + 1] == '.':
+                start_line = self.current_line
+                start_col = self.current_column
+                
+                prev_is_digit = i > 0 and code[i - 1].isdigit()
+                j = i + 2
+                dot_seq = ".."
+                while j < length and (code[j].isalnum() or code[j] == '.'):
+                    dot_seq += code[j]
+                    j += 1
+                
+                if prev_is_digit:
+                    error_msg = f"Множественное использование точки"
+                    self.errors.append(f"Строка {start_line}, колонка {start_col}: {error_msg} - '{dot_seq}'")
+                    self.token_sequence.append(Token("E4", dot_seq, start_line, start_col, LexemType.ERROR, error_msg))
+                    i = j
+                    self.current_column = start_col + len(dot_seq)
+                else:
+                    token_id = self.add_identifier(dot_seq)
+                    self.token_sequence.append(Token(f"I{token_id}", dot_seq, start_line, start_col, LexemType.IDENTIFIER))
+                    i = j
+                    self.current_column = start_col + len(dot_seq)
                 continue
 
             if char.isdigit() or (char == '.' and i + 1 < length and code[i + 1].isdigit()):
@@ -273,30 +295,19 @@ class RLexer:
                 start_line = self.current_line
                 start_col = self.current_column
 
+                if char == '.':
+                    number += char
+                    i += 1
+                    self.current_column += 1
+
                 while i < length:
                     current_char = code[i]
 
-                    if current_char.isalpha():
-                        if current_char.lower() == 'e' and number and not number[-1].isalpha():
-                            if i + 1 < length and (code[i + 1].isdigit() or code[i + 1] in '+-'):
-                                number += current_char
-                                i += 1
-                                self.current_column += 1
-                                continue
-
+                    if current_char.isdigit():
                         number += current_char
                         i += 1
                         self.current_column += 1
-
-                        while i < length and (code[i].isalnum() or code[i] == '.'):
-                            number += code[i]
-                            i += 1
-                            self.current_column += 1
-
-                        error_msg = f"Некорректное построение числа - '{number}' содержит буквы"
-                        self.errors.append(f"Строка {start_line}, колонка {start_col}: {error_msg}")
-                        self.token_sequence.append(Token("E3", number, start_line, start_col, LexemType.ERROR, error_msg))
-                        break
+                        continue
 
                     elif current_char == '.':
                         number += current_char
@@ -313,11 +324,24 @@ class RLexer:
                         else:
                             break
 
-                    elif current_char.isdigit():
+                    elif current_char.isalpha():
+                        if current_char.lower() == 'e' and number and not number[-1].isalpha():
+                            if i + 1 < length and (code[i + 1].isdigit() or code[i + 1] in '+-'):
+                                number += current_char
+                                i += 1
+                                self.current_column += 1
+                                continue
                         number += current_char
                         i += 1
                         self.current_column += 1
-                        continue
+                        while i < length and (code[i].isalnum() or code[i] == '.'):
+                            number += code[i]
+                            i += 1
+                            self.current_column += 1
+                        error_msg = f"Некорректное построение числа - '{number}' содержит буквы"
+                        self.errors.append(f"Строка {start_line}, колонка {start_col}: {error_msg}")
+                        self.token_sequence.append(Token("E3", number, start_line, start_col, LexemType.ERROR, error_msg))
+                        break
 
                     else:
                         break
@@ -330,6 +354,24 @@ class RLexer:
                     else:
                         self.errors.append(f"Строка {start_line}, колонка {start_col}: {error_msg} - '{number}'")
                         self.token_sequence.append(Token("E4", number, start_line, start_col, LexemType.ERROR, error_msg))
+                continue
+
+            if char.isalpha() or char == '_' or (char == '.' and i + 1 < length and not code[i + 1].isdigit()):
+                word = ''
+                start_line = self.current_line
+                start_col = self.current_column
+
+                while i < length and (code[i].isalnum() or code[i] in '._'):
+                    word += code[i]
+                    i += 1
+                    self.current_column += 1
+
+                kw_id = self.is_keyword(word)
+                if kw_id:
+                    self.token_sequence.append(Token(f"W{kw_id}", word, start_line, start_col, LexemType.KEYWORD))
+                else:
+                    token_id = self.add_identifier(word)
+                    self.token_sequence.append(Token(f"I{token_id}", word, start_line, start_col, LexemType.IDENTIFIER))
                 continue
 
             op_found = False
@@ -1515,7 +1557,7 @@ test_a <- 30"""
         HelpWindow(self.root, "О программе", about_text, width=600, height=400)
 
     def show_r_syntax(self):
-        syntax_text = f"""СИНТАКСИС ЯЗЫКА R
+        syntax_text = """СИНТАКСИС ЯЗЫКА R
 
 Ключевые слова:
 if, else, while, for, function, return, TRUE, FALSE, NULL, NA, Inf, NaN
@@ -1542,7 +1584,7 @@ if, else, while, for, function, return, TRUE, FALSE, NULL, NA, Inf, NaN
 'в одинарных кавычках' или "в двойных кавычках"
 
 Разделители:
-, ; : :: ::: ( ) [ ] [[ ]] {{ }} $ @"""
+, ; : :: ::: ( ) [ ] [[ ]] { } ' " ` $ @"""
         HelpWindow(self.root, "Синтаксис R", syntax_text, width=700, height=500)
 
     def show_error_types(self):
