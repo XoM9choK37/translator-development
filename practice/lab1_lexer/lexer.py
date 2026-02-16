@@ -1033,8 +1033,6 @@ test_a <- 30"""
 
             self.update_statistics()
 
-            self.highlight_syntax()
-
             self.highlight_errors()
 
             if self.lexer.errors:
