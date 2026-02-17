@@ -22,5 +22,5 @@
 
 Промежуточная аттестация – требования: 1 сданная лабораторная работа.
 
-### Conda environment installation command below \/ \/ \/
+### Conda environment installation command below \/ \/ \/ 
 conda create --name translator-development python=3.10 "tk=8.6.13=xft_h891c84d_3" pillow -c conda-forge -y
