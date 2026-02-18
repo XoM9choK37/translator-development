@@ -1,6 +1,6 @@
 calculate_stats <- function(data) {
-  mean_val <- mean(data, na.rm = TRUE)
-  sd_val <- sd(data, na.rm = TRUE)
+  mean_val <- mean(data)
+  sd_val <- sd(data)
   if (mean_val > 0) {
     result <- list(
       mean = mean_val,

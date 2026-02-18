@@ -59,21 +59,20 @@ class RLexer:
             "function", "return", "TRUE", "FALSE", "NULL", "NA",
             "Inf", "NaN", "repeat", "switch", "try", "tryCatch",
             "stop", "warning", "require", "library", "source",
-            "setwd", "getwd", "list", "matrix", "data.frame",
+            "setwd", "getwd", "list", "matrix",
             "c", "cbind", "rbind", "length", "nrow", "ncol",
             "summary", "print", "cat", "paste", "sprintf",
             "subset", "merge", "apply", "lapply", "sapply",
             "tapply", "mapply", "aggregate", "plot", "ggplot",
-            "lm", "glm", "summary.lm", "anova", "predict"
+            "lm", "glm", "anova", "predict"
         ]
         for i, kw in enumerate(sorted(keywords_list), 1):
             self.keywords[kw] = i
 
         delimiters_list = [
-            ".", ",", ";", ":", "::", ":::",
+            ",", ";", ":", "::", ":::",
             "(", ")", "[", "]", "[[", "]]",
-            "{", "}", "'", "\"", "`", "$", "@",
-            "\\", "\n", "\t", " ", "\r"
+            "{", "}", "`", "$", "@", "\\"
         ]
         for i, delim in enumerate(delimiters_list, 1):
             self.delimiters[delim] = i
@@ -836,8 +835,8 @@ class RLexerGUI:
         examples = {
             "correct": """# Пример корректного кода на R
 calculate_stats <- function(data) {
-    mean_val <- mean(data, na.rm = TRUE)
-    sd_val <- sd(data, na.rm = TRUE)
+    mean_val <- mean(data)
+    sd_val <- sd(data)
     
     if (mean_val > 0) {
         result <- list(
@@ -1582,7 +1581,7 @@ if, else, while, for, function, return, TRUE, FALSE, NULL, NA, Inf, NaN
 'в одинарных кавычках' или "в двойных кавычках"
 
 Разделители:
-, ; : :: ::: ( ) [ ] [[ ]] { } ' " ` $ @"""
+, ; : :: ::: ( ) [ ] [[ ]] { } ` $ @"""
         HelpWindow(self.root, "Синтаксис R", syntax_text, width=700, height=500)
 
     def show_error_types(self):
