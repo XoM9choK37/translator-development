@@ -64,7 +64,7 @@ class RLexer:
             "summary", "print", "cat", "paste", "sprintf",
             "subset", "merge", "apply", "lapply", "sapply",
             "tapply", "mapply", "aggregate", "plot", "ggplot",
-            "lm", "glm", "anova", "predict"
+            "lm", "glm", "anova", "predict", "ifelse"
         ]
         for i, kw in enumerate(sorted(keywords_list), 1):
             self.keywords[kw] = i
@@ -194,6 +194,8 @@ class RLexer:
 
             if char.isspace():
                 if char == '\n':
+                    # Добавляем токен перевода строки как разделитель
+                    self.token_sequence.append(Token("NL", "\n", self.current_line, self.current_column, LexemType.DELIMITER))
                     self.current_line += 1
                     self.current_column = 1
                 else:
@@ -407,6 +409,13 @@ class RLexer:
                 self.token_sequence.append(Token("E5", char, self.current_line, start_column, LexemType.ERROR, error_msg))
                 i += 1
                 self.current_column += 1
+                
+            if char == '\n':
+                self.token_sequence.append(Token("NL", "\n", self.current_line, self.current_column, LexemType.DELIMITER))
+                self.current_line += 1
+                self.current_column = 1
+                i += 1
+                continue
 
         return self.token_sequence
 
